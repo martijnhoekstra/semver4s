@@ -30,6 +30,46 @@ class MatcherTest extends munit.ScalaCheckSuite {
     for (v <- notMatching) assert(!range.matches(v), clues(clue(range), clue(v)))
   }
 
+  test("partial comparator >") {
+    val range       = m(">2.12")
+    val matching    = List("2.13.2", "2.13.0", "3.2.1").map(v)
+    val notMatching = List("2.12.2", "2.12.0").map(v)
+    for (v <- matching) assert(range.matches(v), clues(clue(range), clue(v)))
+    for (v <- notMatching) assert(!range.matches(v), clues(clue(range), clue(v)))
+  }
+
+  test("partial comparator >=") {
+    val range       = m(">=2.12")
+    val matching    = List("2.12.0", "2.12.10", "2.13.0", "3.0.0").map(v)
+    val notMatching = List("2.11.0", "2.12.0-PRE1").map(v)
+    for (v <- matching) assert(range.matches(v), clues(clue(range), clue(v)))
+    for (v <- notMatching) assert(!range.matches(v), clues(clue(range), clue(v)))
+  }
+
+  test("partial comparator =") {
+    val range       = m("=2.12")
+    val matching    = List("2.12.0", "2.12.10").map(v)
+    val notMatching = List("2.11.0", "2.12.0-PRE1", "2.13.0", "3.0.0").map(v)
+    for (v <- matching) assert(range.matches(v), clues(clue(range), clue(v)))
+    for (v <- notMatching) assert(!range.matches(v), clues(clue(range), clue(v)))
+  }
+
+  test("partial comparator <") {
+    val range       = m("<2.13")
+    val matching    = List("2.12.2", "2.12.0").map(v)
+    val notMatching = List("2.13.2", "2.13.0", "3.2.1", "2.13.0-PRE1").map(v)
+    for (v <- matching) assert(range.matches(v), clues(clue(range), clue(v)))
+    for (v <- notMatching) assert(!range.matches(v), clues(clue(range), clue(v)))
+  }
+
+  test("partial comparator <=") {
+    val range       = m("<=2.13")
+    val matching    = List("2.13.2", "2.13.0", "2.12.0", "2.12.1").map(v)
+    val notMatching = List("2.14.2", "2.14.0", "3.2.1", "2.13.0-PRE1").map(v)
+    for (v <- matching) assert(range.matches(v), clues(clue(range), clue(v)))
+    for (v <- notMatching) assert(!range.matches(v), clues(clue(range), clue(v)))
+  }
+
   test("comparator prerelease") {
     val range       = m(">1.2.3-alpha.3")
     val matching    = List("1.2.3-alpha.7", "1.2.4").map(v)

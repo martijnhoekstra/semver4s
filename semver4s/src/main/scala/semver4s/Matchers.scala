@@ -7,42 +7,74 @@ import cats.kernel.Comparison.EqualTo
 import cats.kernel.Comparison.GreaterThan
 import cats.kernel.Comparison.LessThan
 
-sealed trait Matcher {
-  def matches(that: Version, includePre: Boolean = false): Boolean
+sealed trait PreReleaseBehaviour
+object PreReleaseBehaviour {
+  case object OnSamePatch extends PreReleaseBehaviour
+  case object Always      extends PreReleaseBehaviour
+  case object Never       extends PreReleaseBehaviour
+  case object IfProvided  extends PreReleaseBehaviour
+}
+import PreReleaseBehaviour._
+
+sealed trait Matcher { //alternatively, consider PreReleaseBehaviour as a property of Matcher
+  def matches(that: Version): Boolean
+  def matches(that: Version, pre: PreReleaseBehaviour): Boolean
 }
 
 case class Exact(v: Version) extends Matcher {
-  override def matches(that: Version, includePre: Boolean = false) = v.coreVersion == that.coreVersion && v.pre == that.pre
+  override def matches(that: Version) = matches(that, IfProvided)
+  override def matches(that: Version, pre: PreReleaseBehaviour) =
+    (v.coreVersion == that.coreVersion) && (pre match {
+      case OnSamePatch | PreReleaseBehaviour.Always | IfProvided => v.pre == that.pre
+      case Never                                                 => v.pre.isEmpty && that.pre.isEmpty
+    })
 }
 
 case class GT(v: Version) extends Matcher {
-  override def matches(that: Version, includePre: Boolean = false) =
-    Order.by((x: Version) => (x.major, x.minor, x.patch)).comparison(that, v) match {
-      case EqualTo     => VersionOrder.preReleaseOrder.gt(that.pre, v.pre)
-      case GreaterThan => that.pre.isEmpty || includePre
-      case LessThan    => false
+  override def matches(that: Version) = matches(that, IfProvided)
+  override def matches(that: Version, pre: PreReleaseBehaviour) = {
+    val coreDiff = Order.by((x: Version) => (x.major, x.minor, x.patch)).comparison(that, v)
+    (coreDiff, pre) match {
+      case (EqualTo, Never)                          => that.pre.isEmpty
+      case (GreaterThan, (Never | OnSamePatch))      => that.pre.isEmpty
+      case (EqualTo, _)                              => VersionOrder.preReleaseOrder.gt(that.pre, v.pre)
+      case (GreaterThan, PreReleaseBehaviour.Always) => true
+      case (GreaterThan, IfProvided)                 => that.pre.isEmpty
+      case (LessThan, _)                             => false
     }
+  }
 }
 
 case class LT(v: Version) extends Matcher {
-  override def matches(that: Version, includePre: Boolean = false): Boolean =
-    Order.by((x: Version) => (x.major, x.minor, x.patch)).comparison(that, v) match {
-      case EqualTo     => VersionOrder.preReleaseOrder.lt(that.pre, v.pre)
-      case LessThan    => that.pre.isEmpty || includePre
-      case GreaterThan => false
+  override def matches(that: Version) = matches(that, IfProvided)
+  override def matches(that: Version, pre: PreReleaseBehaviour): Boolean = {
+    val coreDiff = Order.by((x: Version) => (x.major, x.minor, x.patch)).comparison(that, v)
+    (coreDiff, pre) match {
+      case (EqualTo, Never)                               => false
+      case (EqualTo, IfProvided) if v.pre.isEmpty         => false
+      case (EqualTo, _)                                   => VersionOrder.preReleaseOrder.lt(that.pre, v.pre)
+      case (LessThan, (Never | OnSamePatch | IfProvided)) => that.pre.isEmpty
+      case (LessThan, PreReleaseBehaviour.Always)         => true
+      case (GreaterThan, _)                               => false
     }
+  }
 }
 
 case class Or(v1: Matcher, v2: Matcher) extends Matcher {
-  override def matches(that: Version, includePre: Boolean): Boolean = v1.matches(that, includePre) || v2.matches(that, includePre)
+  override def matches(that: Version): Boolean = v1.matches(that) || v2.matches(that)
+  override def matches(that: Version, pre: PreReleaseBehaviour): Boolean =
+    v1.matches(that, pre) || v2.matches(that, pre)
 }
 
 case class And(v1: Matcher, v2: Matcher) extends Matcher {
-  override def matches(that: Version, includePre: Boolean): Boolean = v1.matches(that, includePre) && v2.matches(that, includePre)
+  override def matches(that: Version): Boolean = v1.matches(that) && v2.matches(that)
+  override def matches(that: Version, pre: PreReleaseBehaviour): Boolean =
+    v1.matches(that, pre) && v2.matches(that, pre)
 }
 
 case object Always extends Matcher {
-  override def matches(that: Version, IncludePre: Boolean): Boolean = true
+  override def matches(that: Version): Boolean                           = true
+  override def matches(that: Version, pre: PreReleaseBehaviour): Boolean = true
 }
 
 object Matcher {
@@ -95,7 +127,9 @@ object Matcher {
       case GT(_)    => Some(Unbounded)
       case Always   => Some(Unbounded)
       case LT(v) if v.pre.isEmpty && v.patch != 0 =>
-        Some(Inclusive(Version(v.major, v.minor, v.patch - 1))) //This is a lie: 1.2.4-beta.1 - 1.2.4
+        Some(
+          Inclusive(Version(v.major, v.minor, v.patch - 1))
+        ) //This is a lie: 1.2.4-beta.1 - 1.2.4
       case LT(v)      => Some(Exclusive(v))
       case Or(v1, v2) => (upperBound(v1), upperBound(v2)).mapN(boundOrder.max)
       case And(v1, v2) =>

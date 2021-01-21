@@ -4,18 +4,36 @@ import cats.parse.{Parser => P}
 
 object RangeParsers {
   import SemverParsers._
-  sealed trait Partial
+  sealed trait Partial {
+    def increment: Partial
+    def version: Version
+  }
 
-  case object Wild extends Partial
+  case object Wild extends Partial {
+    def increment = Wild
+    def version   = Version(0, 0, 0)
+  }
 
-  case class Major(major: Long) extends Partial
+  case class Major(major: Long) extends Partial {
+    def increment = Major(major + 1)
+    def version   = Version(major, 0, 0)
+  }
 
-  case class Minor(major: Long, minor: Long) extends Partial
+  case class Minor(major: Long, minor: Long) extends Partial {
+    def increment = Minor(major, minor + 1)
+    def version   = Version(major, minor, 0)
+  }
 
-  case class Patch(major: Long, minor: Long, patch: Long) extends Partial
+  case class Patch(major: Long, minor: Long, patch: Long) extends Partial {
+    def increment = Patch(major, minor, patch + 1)
+    def version   = Version(major, minor, patch)
+  }
 
   case class Pre(major: Long, minor: Long, patch: Long, pre: SemVer.PreReleaseSuffix)
-      extends Partial
+      extends Partial {
+    def increment = ???
+    def version   = Version(major, minor, patch, Some(pre), None)
+  }
 
   /*
   A version range is a set of comparators which specify versions that satisfy the range.
@@ -62,25 +80,6 @@ object RangeParsers {
 
   }
 
-  /*
-range-set  ::= range ( logical-or range ) *
-logical-or ::= ( ' ' ) * '||' ( ' ' ) *
-range      ::= hyphen | simple ( ' ' simple ) * | ''
-hyphen     ::= partial ' - ' partial
-simple     ::= primitive | partial | tilde | caret
-primitive  ::= ( '<' | '>' | '>=' | '<=' | '=' ) partial
-partial    ::= xr ( '.' xr ( '.' xr qualifier ? )? )?
-xr         ::= 'x' | 'X' | '*' | nr
-nr         ::= '0' | ['1'-'9'] ( ['0'-'9'] ) *
-tilde      ::= '~' partial
-caret      ::= '^' partial
-qualifier  ::= ( '-' pre )? ( '+' build )?
-pre        ::= parts
-build      ::= parts
-parts      ::= part ( '.' part ) *
-part       ::= nr | [-0-9A-Za-z]+
-   */
-
   val qualifier = preRelease.? ~ build.?
   val caret     = P.char('^') *> partial.map(caretRange)
   val tilde     = P.char('~') *> partial.map(tildeRange)
@@ -89,7 +88,7 @@ part       ::= nr | [-0-9A-Za-z]+
   val gt        = P.char('>').as(Op.GT)
   val opgte     = P.string(">=").backtrack.as(Op.GTE)
   val eq        = P.char('=').as(Op.EQ)
-  val primitive = P.oneOf(List(lte, opgte, gt, lt, eq)) ~ semver
+  val primitive = P.oneOf(List(lte, opgte, gt, lt, eq)) ~ partial
   val simple = P.oneOf(
     List(
       tilde,
@@ -99,14 +98,14 @@ part       ::= nr | [-0-9A-Za-z]+
     )
   )
   val hyphen = partial ~ (P.string(" - ") *> partial)
-  
+
   val range = P.oneOf(
     List(
       hyphen.backtrack.map { case (from, to) => hyphenRange(from, to) },
       simple.repSep(P.char(' ').backtrack).map(_.reduceLeft(_ && _))
     )
   )
-  
+
   val logicalOr = P.string("||").surroundedBy(P.char(' ').rep)
   val rangeSet  = range.repSep(logicalOr).map(_.reduceLeft(_ || _)).orElse(P.pure(Always))
 
@@ -166,12 +165,20 @@ part       ::= nr | [-0-9A-Za-z]+
     }
   }
 
-  def primitiveRange(op: Op.SimpleOp, v: Version): Matcher = op match {
-    case Op.EQ  => Exact(v)
-    case Op.GT  => GT(v)
-    case Op.GTE => Matcher.gte(v)
-    case Op.LT  => LT(v)
-    case Op.LTE => Matcher.lte(v)
+  def primitiveRange(op: Op.SimpleOp, p: Partial): Matcher = op match {
+    case Op.EQ => xrange(p)
+    case Op.GT =>
+      p match {
+        case _: Patch | _: Pre => GT(p.version)
+        case _                 => Matcher.gte(p.increment.version)
+      }
+    case Op.GTE => Matcher.gte(p.version)
+    case Op.LT  => LT(p.version)
+    case Op.LTE =>
+      p match {
+        case _: Patch | _: Pre | Wild => Matcher.lte(p.version)
+        case _                        => LT(p.increment.version)
+      }
   }
 
   def xrange(p: Partial): Matcher = p match {
