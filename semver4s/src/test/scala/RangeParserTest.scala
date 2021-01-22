@@ -34,7 +34,7 @@ class RangeParserTest extends munit.ScalaCheckSuite {
   test("partial range examples") {
     List("1", "1.2").foreach { r =>
       val result = RangeParsers.partial.parseAll(r)
-      assert(result.isRight, clues(clue(r), clue(result)))
+      assert(clue(result).isRight, clue(r))
     }
   }
 
@@ -48,7 +48,7 @@ class RangeParserTest extends munit.ScalaCheckSuite {
   test("hyphen range examples") {
     List("1.2.3 - 2.3.4", "1.2 - 2.3.4", "1.2.3 - 2.3", "1.2.3 - 2").foreach { r =>
       val result = RangeParsers.hyphen.parseAll(r)
-      assert(result.isRight, clues(clue(r), clue(result)))
+      assert(clue(result).isRight, clue(r))
     }
   }
 
@@ -62,7 +62,7 @@ class RangeParserTest extends munit.ScalaCheckSuite {
   test("tilde examples") {
     List("~1.2.3", "~1.2", "~1", "~0.2.3", "~0.2", "~0", "~1.2.3-beta.2").foreach { r =>
       val result = RangeParsers.tilde.parseAll(r)
-      assert(result.isRight, clues(clue(r), clue(result)))
+      assert(clue(result).isRight, clue(r))
     }
   }
 
@@ -87,7 +87,7 @@ class RangeParserTest extends munit.ScalaCheckSuite {
       "^1.x"
     ).foreach { r =>
       val result = RangeParsers.caret.parseAll(r)
-      assert(result.isRight, clues(clue(r), clue(result)))
+      assert(clue(result).isRight, clue(r))
     }
   }
 
@@ -101,7 +101,7 @@ class RangeParserTest extends munit.ScalaCheckSuite {
   test("range examples") {
     List(">=1.2.7 <1.3.0").foreach { r =>
       val result = RangeParsers.range.parseAll(r)
-      assert(result.isRight, clues(clue(r), clue(result)))
+      assert(clue(result).isRight, clue(r))
     }
   }
 
@@ -115,7 +115,7 @@ class RangeParserTest extends munit.ScalaCheckSuite {
   test("range set examples") {
     List("1.x || >=2.5.0 || 5.0.0 - 7.2.3", "1.2.7 || >=1.2.9 <2.0.0").foreach { r =>
       val result = RangeParsers.rangeSet.parseAll(r)
-      assert(result.isRight, clues(clue(r), clue(result)))
+      assert(clue(result).isRight, clue(r))
     }
   }
 

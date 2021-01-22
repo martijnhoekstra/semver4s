@@ -7,7 +7,7 @@ import xerial.sbt.Sonatype._
 ThisBuild / testFrameworks += new TestFramework("munit.Framework")
 ThisBuild / scalaVersion := scala213Version
 ThisBuild / organization := "com.heroestools"
-ThisBuild / licenses := Seq("APL2" -> url("http://www.apache.org/licenses/LICENSE-2.0.txt"))
+ThisBuild / licenses := Seq("LGPLv3" -> url("https://www.gnu.org/licenses/lgpl-3.0.en.html"))
 ThisBuild / developers := List(
   Developer(id="Martijn", name="Martijn Hoekstra", email="martijnhoekstra@gmail.com", url=url("https://www.github.com"))
 )
@@ -24,7 +24,7 @@ lazy val global = project
 lazy val lib = project.in(file("semver4s"))
   .settings(
     name := "semver4s",
-    version := "0.1.0",
+    version := "0.1.1-SNAPSHOT",
     crossScalaVersions := List(dottyVersion, scala213Version, scala212Version),
     libraryDependencies ++= List(
       "org.typelevel" %% "cats-parse" % "0.3.0",
