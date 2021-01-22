@@ -13,7 +13,7 @@ object GenMatcher {
 
   val genId = Gen
     .oneOf(
-      Gen.chooseNum(0, Long.MaxValue).map(_.toString()),
+      Gen.chooseNum(0L, Long.MaxValue).map(_.toString()),
       Gen.stringOf(genIdChar).filterNot(_.isEmpty())
     )
     .map("-" + _)
