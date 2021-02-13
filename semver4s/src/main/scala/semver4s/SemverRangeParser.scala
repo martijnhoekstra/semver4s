@@ -60,7 +60,9 @@ object RangeParsers {
     val gt  = P.char('>').as(Op.GT)
     val gte = P.string(">=").backtrack.as(Op.GTE)
     val eq  = P.char('=').as(Op.EQ)
-    (P.oneOf(List(lte, gte, gt, lt, eq)) ~ partial).map{ case (op, part) => primitiveRange(op, part)}
+    (P.oneOf(List(lte, gte, gt, lt, eq)) ~ partial).map { case (op, part) =>
+      primitiveRange(op, part)
+    }
   }
   val simple: P[Simple] = P.oneOf(
     List(

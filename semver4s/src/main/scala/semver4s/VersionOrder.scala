@@ -9,7 +9,7 @@ object VersionOrder {
   import SemVer._
 
   /** ASCII-betical sort order for strings
-    * 
+    *
     * A lexical ordering where individual characters are sorted based on their
     * codepoint value
     */
@@ -20,9 +20,9 @@ object VersionOrder {
   def collationOrder(collator: Collator): Order[String] = Order.from(collator.compare)
 
   /** Order of identifiers as defined by SemVer
-    * 
+    *
     * Sorts numerical identifiers before alphanumeric identifiers.
-    * 
+    *
     * Numerical identifiers are sorted by their numeric value, alphanumeric
     * identifiers are sorted ascii-betically.
     */

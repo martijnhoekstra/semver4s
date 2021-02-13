@@ -61,7 +61,7 @@ object GenMatcher {
 
   val genRange = {
     val nonHyphenRangePart = Gen.oneOf(genPartial, genPrimitive, genTildeRange, genCaretRange)
-    val nonHyphenRange = Gen.nonEmptyListOf(nonHyphenRangePart).map(_.mkString(" "))
+    val nonHyphenRange     = Gen.nonEmptyListOf(nonHyphenRangePart).map(_.mkString(" "))
     Gen.oneOf(genHyphenRange, nonHyphenRange)
   }
 
