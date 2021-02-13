@@ -10,8 +10,8 @@ object Reporter {
   def report(error: Parser.Error, source: String): NonEmptyList[String] = {
     val map = LocationMap(source)
     def pointer(offset: Int): List[String] = (for {
-      (linei, col) <- map.toLineCol(offset)
-      line         <- map.getLine(linei)
+      (lineNumber, col) <- map.toLineCol(offset)
+      line              <- map.getLine(lineNumber)
     } yield List(line, (" " * col) + "^")).getOrElse(Nil)
 
     val errors = error.expected
@@ -38,11 +38,11 @@ object Reporter {
 
   def prettyExpectation(exp: Parser.Expectation) = {
     val pf: PartialFunction[Parser.Expectation, String] = {
-      case OneOfStr(_, strs) =>
-        s"one of the following: " + strs.map(str => s"'$str'").mkString(", ")
-      case InRange(_, lower, upper) if (lower == upper) => s"character ${charinfo(lower)}"
+      case OneOfStr(_, options) =>
+        s"one of the following: " + options.map(str => s"'$str'").mkString(", ")
+      case InRange(_, lower, upper) if (lower == upper) => s"character ${charInfo(lower)}"
       case InRange(_, lower, upper) =>
-        s"a character between ${charinfo(lower)} and ${charinfo(upper)}"
+        s"a character between ${charInfo(lower)} and ${charInfo(upper)}"
       case StartOfString(_)            => "the start of input"
       case EndOfString(_, _)           => "the end of the string"
       case Length(_, expected, actual) => s"$expected remaining characters, but $actual found"
@@ -51,7 +51,7 @@ object Reporter {
     pf.lift(exp)
   }
 
-  def charinfo(ch: Char): String = {
+  def charInfo(ch: Char): String = {
     val asU = "\\u" + ch.toInt.toHexString
     val printable = Set(
       Character.CURRENCY_SYMBOL,
@@ -75,8 +75,8 @@ object Reporter {
       val name = Character.getName(ch.toInt)
       if (Character.isLetterOrDigit(ch)) s"'$ch': $name, codepoint $asU"
       else if (Character.isWhitespace(ch)) s"$name, codepoint $asU"
-      else if (name.isEmpty) s"noncharacter $asU"
-      else if (Character.isISOControl(ch)) s"Control character $asU"
+      else if (name.isEmpty) s"non-character $asU"
+      else if (Character.isISOControl(ch)) s"control character $asU"
       else if (printable.contains(Character.getType(ch).toByte)) s"'$ch': $name, codepoint $asU"
       else s"$name, codepoint $asU"
     }

@@ -3,39 +3,10 @@ package semver4s
 import cats._
 import cats.implicits._
 import cats.data.NonEmptyList
-import cats.kernel.Comparison._
 
 object SemVer {
   type Identifier       = Either[String, Long]
   type PreReleaseSuffix = NonEmptyList[Identifier]
-}
-
-object VersionOrder {
-  import SemVer._
-
-  val identifierPrecedence: Order[Identifier] = Order.from {
-    case (Left(n1), Left(n2)) => Order.compare(n1, n2)
-    case (Right(str1), Right(str2)) =>
-      Order.compare(str1, str2) //ASCIIbetical lexical ordering
-    case (Left(_), Right(_)) => LessThan.toInt //numerical sorts before alphanumerical
-    case (Right(_), Left(_)) => GreaterThan.toInt
-  }
-
-  def preReleasePrecedence(l1: List[Identifier], l2: List[Identifier]): Int = (l1, l2) match {
-    case (Nil, Nil)                                               => EqualTo.toInt
-    case (_, Nil)                                                 => GreaterThan.toInt
-    case (Nil, _)                                                 => LessThan.toInt
-    case (i1 :: lt, i2 :: rt) if identifierPrecedence.eqv(i1, i2) => preReleasePrecedence(lt, rt)
-    case (i1 :: _, i2 :: _)                                       => Order.compare(i1, i2)
-  }
-
-  val preReleaseOrder: Order[Option[PreReleaseSuffix]] = Order.from {
-    case (None, None)       => EqualTo.toInt
-    case (Some(x), Some(y)) => preReleasePrecedence(x.toList, y.toList)
-    case (None, _)          => GreaterThan.toInt
-    case (_, None)          => LessThan.toInt
-  }
-
 }
 
 object Version {
@@ -79,4 +50,6 @@ case class Version(
   }
 }
 
-case class CoreVersion(major: Long, minor: Long, patch: Long)
+case class CoreVersion(major: Long, minor: Long, patch: Long) {
+  def toVersion = Version(major, minor, patch)
+}

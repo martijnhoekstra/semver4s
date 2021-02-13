@@ -33,7 +33,11 @@ object SemverApp
     "print the lowest version that satisfies some range. If a list of versions is given, the version must be from that list"
   ) {
     val toPrint = (range, versions).mapN {
-      case (r, Nil) => Matcher.lowerBound(r).map(_.format)
+      case (r, Nil) => (Matcher.lowerBound(r) match {
+        case Unbounded => "0.0.0"
+        case Inclusive(by) => by.format
+        case Exclusive(by) => by.format + " (exclusive)"
+      }).pure[Option]
       case (r, vs) =>
         vs.sorted(Version.precedence.toOrdering).collectFirst {
           case v if r.matches(v) => v.format
@@ -50,11 +54,11 @@ object SemverApp
   ) {
     val toPrint = (range, versions).mapN {
       case (r, Nil) =>
-        Matcher.upperBound(r).map {
+        (Matcher.upperBound(r) match {
           case Unbounded    => "unbounded"
           case Inclusive(v) => v.format
-          case Exclusive(v) => "<" + v.format
-        }
+          case Exclusive(v) => v.format + " (exclusive)"
+        }).pure[Option]
       case (r, vs) =>
         vs.sorted(Version.precedence.toOrdering).reverse.collectFirst {
           case v if r.matches(v) => v.format
@@ -73,7 +77,7 @@ object SemverApp
       def defaultMetavar = "major.minor.patch(-pre)?(+bld)?(;major.minor.patch(-pre)?(+bld)?)*"
     }
 
-  implicit def rangeArgument: Argument[Matcher] = new ParserArgument(semVerMatcher) {
+  implicit def rangeArgument: Argument[Matcher] = new ParserArgument[Matcher](semVerMatcher) {
     def defaultMetavar = "major.minor.patch(-pre)?(+bld)?"
   }
 }
