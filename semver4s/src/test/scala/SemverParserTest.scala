@@ -27,31 +27,38 @@ import org.scalacheck.Gen
 class SemverParserTest extends munit.ScalaCheckSuite {
 
   val genPreRelease = Gen.oneOf("-alpha", "-beta", "-alpha.1")
-  val genMetadata = Gen.oneOf("+001", "+20130313144700", "+exp.sha.5114f85", "+21AF26D3", "+21AF26D3--117B344092BD")
+  val genMetadata =
+    Gen.oneOf("+001", "+20130313144700", "+exp.sha.5114f85", "+21AF26D3", "+21AF26D3--117B344092BD")
 
   val genSemVer: Gen[String] = for {
-    major <- Gen.choose(0, 1000)
-    minor <- Gen.choose(0, 1000)
-    patch <- Gen.choose(0, 10000)
-    preRelease <- Gen.oneOf(Gen.const(""), genPreRelease)
+    major         <- Gen.choose(0, 1000)
+    minor         <- Gen.choose(0, 1000)
+    patch         <- Gen.choose(0, 10000)
+    preRelease    <- Gen.oneOf(Gen.const(""), genPreRelease)
     buildMetadata <- Gen.oneOf(Gen.const(""), genMetadata)
   } yield s"$major.$minor.$patch$preRelease$buildMetadata"
 
   property("semver parses prerelease") {
-    forAll(genPreRelease) { (pre: String) => {
-      assertEquals(SemverParsers.preRelease.string.parseAll(pre), Right(pre))
-    }}
+    forAll(genPreRelease) { (pre: String) =>
+      {
+        assertEquals(SemverParsers.preRelease.string.parseAll(pre), Right(pre))
+      }
+    }
   }
 
   property(("semver parsers metadata")) {
-    forAll(genMetadata) { (meta: String) => {
-      assertEquals(SemverParsers.build.string.parseAll(meta), Right(meta))
-    }}
+    forAll(genMetadata) { (meta: String) =>
+      {
+        assertEquals(SemverParsers.build.string.parseAll(meta), Right(meta))
+      }
+    }
   }
 
   property("semver parses SemVer") {
-    forAll(genSemVer) { (sv: String) => {
-      assertEquals(SemverParsers.semver.string.parseAll(sv), Right(sv))
-    }}
+    forAll(genSemVer) { (sv: String) =>
+      {
+        assertEquals(SemverParsers.semver.string.parseAll(sv), Right(sv))
+      }
+    }
   }
 }

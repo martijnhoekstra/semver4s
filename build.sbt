@@ -1,4 +1,4 @@
-val dottyVersion = "3.0.0-M3"
+val dottyVersion    = "3.0.0-M3"
 val scala213Version = "2.13.4"
 val scala212Version = "2.12.13"
 
@@ -9,9 +9,13 @@ ThisBuild / scalaVersion := scala213Version
 ThisBuild / organization := "com.heroestools"
 ThisBuild / licenses := Seq("LGPLv3" -> url("https://www.gnu.org/licenses/lgpl-3.0.en.html"))
 ThisBuild / developers := List(
-  Developer(id="Martijn", name="Martijn Hoekstra", email="martijnhoekstra@gmail.com", url=url("https://www.github.com"))
+  Developer(
+    id = "Martijn",
+    name = "Martijn Hoekstra",
+    email = "martijnhoekstra@gmail.com",
+    url = url("https://www.github.com")
+  )
 )
-
 
 //lazy val global = project
 //  .in(file("."))
@@ -20,29 +24,36 @@ ThisBuild / developers := List(
 //    publish / skip := true
 //  )
 
-
-lazy val lib = projectMatrix.in(file("semver4s"))
+lazy val lib = projectMatrix
+  .in(file("semver4s"))
   .settings(
     name := "semver4s",
     version := "0.1.1-SNAPSHOT",
     crossScalaVersions := List(dottyVersion, scala213Version, scala212Version),
     libraryDependencies ++= List(
-      "org.typelevel" %% "cats-parse" % "0.3.0",
-      "org.scalameta" %% "munit" % "0.7.21",
-      "org.scalameta" %% "munit-scalacheck" % "0.7.21"),
+      "org.typelevel" %% "cats-parse"       % "0.3.0",
+      "org.scalameta" %% "munit"            % "0.7.20",
+      "org.scalameta" %% "munit-scalacheck" % "0.7.20"
+    ),
     publishTo := sonatypePublishToBundle.value,
-    sonatypeProjectHosting := Some(GitHubHosting("martijnhoekstra", "semver4s", "martijnhoekstra@gmail.com"))
-  ).jvmPlatform(scalaVersions = List(dottyVersion, scala212Version, scala213Version))
+    sonatypeProjectHosting := Some(
+      GitHubHosting("martijnhoekstra", "semver4s", "martijnhoekstra@gmail.com")
+    )
+  )
+  .jvmPlatform(scalaVersions = List(dottyVersion, scala212Version, scala213Version))
   .jsPlatform(scalaVersions = List(dottyVersion, scala212Version, scala213Version))
 
-lazy val cli = projectMatrix.in(file("cli"))  
+lazy val cli = projectMatrix
+  .in(file("cli"))
   .settings(
     crossScalaVersions := List(scala213Version, scala212Version),
     name := "semver4s-cli",
     version := "1.0.0",
     libraryDependencies ++= List(
-      "com.monovore" %% "decline" % "1.3.0",
-      "com.monovore" %% "decline-effect" % "1.3.0")
-  ).dependsOn(lib)
+      "com.monovore" %% "decline"        % "1.3.0",
+      "com.monovore" %% "decline-effect" % "1.3.0"
+    )
+  )
+  .dependsOn(lib)
   .jvmPlatform(scalaVersions = List(scala212Version, scala213Version))
   .jsPlatform(scalaVersions = List(scala212Version, scala213Version))
