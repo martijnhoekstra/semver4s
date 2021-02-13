@@ -1,40 +1,10 @@
 package semver4s
 
 import cats.parse.{Parser => P}
+import cats.data.NonEmptyList
 
 object RangeParsers {
   import SemverParsers._
-  sealed trait Partial {
-    def increment: Partial
-    def version: Version
-  }
-
-  case object Wild extends Partial {
-    def increment = Wild
-    def version   = Version(0, 0, 0)
-  }
-
-  case class Major(major: Long) extends Partial {
-    def increment = Major(major + 1)
-    def version   = Version(major, 0, 0)
-  }
-
-  case class Minor(major: Long, minor: Long) extends Partial {
-    def increment = Minor(major, minor + 1)
-    def version   = Version(major, minor, 0)
-  }
-
-  case class Patch(major: Long, minor: Long, patch: Long) extends Partial {
-    def increment = Patch(major, minor, patch + 1)
-    def version   = Version(major, minor, patch)
-  }
-
-  case class Pre(major: Long, minor: Long, patch: Long, pre: SemVer.PreReleaseSuffix)
-      extends Partial {
-    def increment = ???
-    def version   = Version(major, minor, patch, Some(pre), None)
-  }
-
   /*
   A version range is a set of comparators which specify versions that satisfy the range.
   A comparator is composed of an operator and a version. The set of primitive operators is:
@@ -42,7 +12,8 @@ object RangeParsers {
     <= Less than or equal to
     >  Greater than
     >= Greater than or equal to
-    =  Equal. If no operator is specified, then equality is assumed, so this operator is optional, but MAY be included.
+    =  Equal. If no operator is specified, then equality is assumed.
+              As a result, this operator is optional, but MAY be included.
    */
 
   object Op {
@@ -83,110 +54,47 @@ object RangeParsers {
   val qualifier = preRelease.? ~ build.?
   val caret     = P.char('^') *> partial.map(caretRange)
   val tilde     = P.char('~') *> partial.map(tildeRange)
-  val lt        = P.char('<').as(Op.LT)
-  val lte       = P.string("<=").backtrack.as(Op.LTE)
-  val gt        = P.char('>').as(Op.GT)
-  val opgte     = P.string(">=").backtrack.as(Op.GTE)
-  val eq        = P.char('=').as(Op.EQ)
-  val primitive = P.oneOf(List(lte, opgte, gt, lt, eq)) ~ partial
-  val simple = P.oneOf(
+  val primitive = {
+    val lt  = P.char('<').as(Op.LT)
+    val lte = P.string("<=").backtrack.as(Op.LTE)
+    val gt  = P.char('>').as(Op.GT)
+    val gte = P.string(">=").backtrack.as(Op.GTE)
+    val eq  = P.char('=').as(Op.EQ)
+    (P.oneOf(List(lte, gte, gt, lt, eq)) ~ partial).map{ case (op, part) => primitiveRange(op, part)}
+  }
+  val simple: P[Simple] = P.oneOf(
     List(
       tilde,
       caret,
-      primitive.map { case (op, part) => primitiveRange(op, part) },
-      partial.map(xrange)
+      primitive,
+      partial.map(primitiveRange(Op.EQ, _))
     )
   )
   val hyphen = partial ~ (P.string(" - ") *> partial)
 
-  val range = P.oneOf(
+  val range: P[And] = P.oneOf(
     List(
-      hyphen.backtrack.map { case (from, to) => hyphenRange(from, to) },
-      simple.repSep(P.char(' ').backtrack).map(_.reduceLeft(_ && _))
+      hyphen.backtrack
+        .map { case (from, to) => hyphenRange(from, to) }
+        .map(h => And(NonEmptyList(h, Nil))),
+      simple.repSep(P.char(' ').backtrack).map(And(_))
     )
   )
 
   val logicalOr = P.string("||").surroundedBy(P.char(' ').rep)
-  val rangeSet  = range.repSep(logicalOr).map(_.reduceLeft(_ || _)).orElse(P.pure(Always))
+  val rangeSet  = range.repSep(logicalOr).map(Or(_))
 
-  def hyphenRange(lower: Partial, upper: Partial): Matcher = {
-    val matchLower = Matcher.gte(lower match {
-      case Wild                          => Version(0, 0, 0)
-      case Major(major)                  => Version(major, 0, 0)
-      case Minor(major, minor)           => Version(major, minor, 0)
-      case Patch(major, minor, patch)    => Version(major, minor, patch)
-      case Pre(major, minor, patch, pre) => Version(major, minor, patch, Some(pre), None)
-    })
-    upper match {
-      case Wild                => matchLower
-      case Major(major)        => matchLower && LT(Version(major + 1, 0, 0))
-      case Minor(major, minor) => matchLower && LT(Version(major, minor + 1, 0))
-      case Patch(major, minor, patch) =>
-        matchLower && Matcher.lte(Version(major, minor, patch))
-      case Pre(major, minor, patch, pre) =>
-        matchLower && Matcher.lte(Version(major, minor, patch, Some(pre), None)) // <- ???
-    }
-  }
-  def tildeRange(part: Partial): Matcher = {
-    val (from, to) = part match {
-      case Wild => throw new IllegalArgumentException("wildcard pattern invalid for tilde range")
-      case Pre(maj, min, pat, pre) =>
-        Version(maj, min, pat, Some(pre), None) -> Version(maj, min + 1, 0)
-      case Patch(maj, min, pat) =>
-        Version(maj, min, pat) -> Version(maj, min + 1, 0)
-      case Minor(maj, min) =>
-        Version(maj, min, 0) -> Version(maj, min + 1, 0)
-      case Major(maj) =>
-        Version(maj, 0, 0) -> Version(maj + 1, 0, 0)
-    }
-    Matcher.gte(from) && LT(to)
-  }
+  def hyphenRange(lower: Partial, upper: Partial) = Hyphen(lower, upper)
 
-  def caretRange(p: Partial): Matcher = {
-    import Matcher.gte
-    p match {
-      case Wild            => throw new IllegalArgumentException("wildcard pattern invalid for caret range")
-      case Major(maj)      => gte(Version(maj, 0, 0)) && LT(Version(maj + 1, 0, 0))
-      case Minor(0, min)   => gte(Version(0, min, 0)) && LT(Version(0, min + 1, 0))
-      case Minor(maj, min) => gte(Version(maj, min, 0)) && LT(Version(maj + 1, 0, 0))
+  def tildeRange(part: Partial) = Tilde(part)
 
-      case Patch(0, 0, pat) =>
-        gte(Version(0, 0, pat)) && LT(Version(0, 0, pat + 1))
-      case Pre(0, 0, pat, pre) =>
-        gte(Version(0, 0, pat, Some(pre), None)) && LT(Version(0, 0, pat + 1))
-      case Patch(0, min, pat) =>
-        gte(Version(0, min, pat)) && LT(Version(0, min + 1, 0))
-      case Pre(0, min, pat, pre) =>
-        gte(Version(0, min, pat, Some(pre), None)) && LT(Version(0, min + 1, 0))
-      case Patch(maj, min, pat) =>
-        gte(Version(maj, min, pat)) && LT(Version(maj + 1, 0, 0))
-      case Pre(maj, min, pat, pre) =>
-        gte(Version(maj, min, pat, Some(pre), None)) && LT(Version(maj + 1, 0, 0))
-    }
-  }
+  def caretRange(p: Partial) = Caret(p)
 
-  def primitiveRange(op: Op.SimpleOp, p: Partial): Matcher = op match {
-    case Op.EQ => xrange(p)
-    case Op.GT =>
-      p match {
-        case _: Patch | _: Pre => GT(p.version)
-        case _                 => Matcher.gte(p.increment.version)
-      }
-    case Op.GTE => Matcher.gte(p.version)
-    case Op.LT  => LT(p.version)
-    case Op.LTE =>
-      p match {
-        case _: Patch | _: Pre | Wild => Matcher.lte(p.version)
-        case _                        => LT(p.increment.version)
-      }
-  }
-
-  def xrange(p: Partial): Matcher = p match {
-    case Wild         => Always
-    case Major(major) => Matcher.gte(Version(major, 0, 0)) && LT(Version(major + 1, 0, 0))
-    case Minor(major, minor) =>
-      Matcher.gte(Version(major, minor, 0)) && LT(Version(major, minor + 1, 0))
-    case Patch(major, minor, patch)    => Exact(Version(major, minor, patch))
-    case Pre(major, minor, patch, pre) => Exact(Version(major, minor, patch, Some(pre), None))
+  def primitiveRange(op: Op.SimpleOp, p: Partial) = op match {
+    case Op.EQ  => Exact(p)
+    case Op.GT  => Matcher.gt(p)
+    case Op.GTE => Matcher.gte(p)
+    case Op.LT  => Matcher.lt(p)
+    case Op.LTE => Matcher.lte(p)
   }
 }

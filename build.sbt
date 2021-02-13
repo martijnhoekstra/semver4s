@@ -13,15 +13,15 @@ ThisBuild / developers := List(
 )
 
 
-lazy val global = project
-  .in(file("."))
-  .aggregate(lib, cli)
-  .settings(
-    publish / skip := true
-  )
+//lazy val global = project
+//  .in(file("."))
+//  .aggregate(lib, cli)
+//  .settings(
+//    publish / skip := true
+//  )
 
 
-lazy val lib = project.in(file("semver4s"))
+lazy val lib = projectMatrix.in(file("semver4s"))
   .settings(
     name := "semver4s",
     version := "0.1.1-SNAPSHOT",
@@ -32,9 +32,10 @@ lazy val lib = project.in(file("semver4s"))
       "org.scalameta" %% "munit-scalacheck" % "0.7.20"),
     publishTo := sonatypePublishToBundle.value,
     sonatypeProjectHosting := Some(GitHubHosting("martijnhoekstra", "semver4s", "martijnhoekstra@gmail.com"))
-  )
+  ).jvmPlatform(scalaVersions = List(dottyVersion, scala212Version, scala213Version))
+  .jsPlatform(scalaVersions = List(dottyVersion, scala212Version, scala213Version))
 
-lazy val cli = project.in(file("cli"))  
+lazy val cli = projectMatrix.in(file("cli"))  
   .settings(
     crossScalaVersions := List(scala213Version, scala212Version),
     name := "semver4s-cli",
@@ -43,3 +44,5 @@ lazy val cli = project.in(file("cli"))
       "com.monovore" %% "decline" % "1.3.0",
       "com.monovore" %% "decline-effect" % "1.3.0")
   ).dependsOn(lib)
+  .jvmPlatform(scalaVersions = List(scala212Version, scala213Version))
+  .jsPlatform(scalaVersions = List(scala212Version, scala213Version))
