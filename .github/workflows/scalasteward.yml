@@ -1,5 +1,7 @@
-# This workflow will launch every day at noon
+# Launch scala steward on each merge to main and daily at noon
 on:
+  push:
+    branches: main
   schedule:
     - cron: '0 12 * * *'
 
