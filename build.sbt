@@ -28,8 +28,8 @@ lazy val lib = projectMatrix.in(file("semver4s"))
     crossScalaVersions := List(dottyVersion, scala213Version, scala212Version),
     libraryDependencies ++= List(
       "org.typelevel" %% "cats-parse" % "0.3.0",
-      "org.scalameta" %% "munit" % "0.7.20",
-      "org.scalameta" %% "munit-scalacheck" % "0.7.20"),
+      "org.scalameta" %% "munit" % "0.7.21",
+      "org.scalameta" %% "munit-scalacheck" % "0.7.21"),
     publishTo := sonatypePublishToBundle.value,
     sonatypeProjectHosting := Some(GitHubHosting("martijnhoekstra", "semver4s", "martijnhoekstra@gmail.com"))
   ).jvmPlatform(scalaVersions = List(dottyVersion, scala212Version, scala213Version))
