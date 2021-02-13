@@ -33,11 +33,12 @@ object SemverApp
     "print the lowest version that satisfies some range. If a list of versions is given, the version must be from that list"
   ) {
     val toPrint = (range, versions).mapN {
-      case (r, Nil) => (Matcher.lowerBound(r) match {
-        case Unbounded => "0.0.0"
-        case Inclusive(by) => by.format
-        case Exclusive(by) => by.format + " (exclusive)"
-      }).pure[Option]
+      case (r, Nil) =>
+        (Matcher.lowerBound(r) match {
+          case Unbounded     => "0.0.0"
+          case Inclusive(by) => by.format
+          case Exclusive(by) => by.format + " (exclusive)"
+        }).pure[Option]
       case (r, vs) =>
         vs.sorted(Version.precedence.toOrdering).collectFirst {
           case v if r.matches(v) => v.format
