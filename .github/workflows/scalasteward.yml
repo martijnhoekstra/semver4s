@@ -1,4 +1,5 @@
 # Launch scala steward on each merge to main and daily at noon
+name: Scala Steward
 on:
   push:
     branches: main
@@ -13,4 +14,4 @@ jobs:
       - name: Launch Scala Steward
         uses: scala-steward-org/scala-steward-action@v2
         with:
-          github-token: ${{ secrets.ADMIN_GITHUB_TOKEN }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
