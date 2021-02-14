@@ -10,10 +10,18 @@ object SemVer {
 }
 
 object Version {
+
+  /** Construct a core version from major.minor.patch
+    */
   def apply(major: Long, minor: Long, patch: Long) = new Version(major, minor, patch, None, None)
+
+  /** Construct a core version from major.minor.patch if all are Int
+    */
   def apply(major: Int, minor: Int, patch: Int) =
     new Version(major.toLong, minor.toLong, patch.toLong, None, None)
 
+  /** Version order, where each higher version sorts after a lower version
+    */
   val precedence: Order[Version] = {
     implicit val pre = VersionOrder.preReleaseOrder
     Order.by((v: Version) => (v.major, v.minor, v.patch, v.pre))
@@ -28,12 +36,18 @@ object Version {
     case Version(maj, min, pat, None, _)      => Version(maj, min, pat + 1)
   }
 
-  def inc(suffix: SemVer.PreReleaseSuffix): SemVer.PreReleaseSuffix = suffix.reverse match {
-    case NonEmptyList(Right(l), tail) => NonEmptyList(Right(l + 1), tail).reverse
-    case NonEmptyList(Left(s), tail)  => NonEmptyList(Left(s + "0"), tail).reverse
-  }
+  private[this] def inc(suffix: SemVer.PreReleaseSuffix): SemVer.PreReleaseSuffix =
+    suffix.reverse match {
+      case NonEmptyList(Right(l), tail) => NonEmptyList(Right(l + 1), tail).reverse
+      case NonEmptyList(Left(s), tail)  => NonEmptyList(Left(s + "0"), tail).reverse
+    }
 }
 
+/** A semver version specification
+  *
+  * Consisting of a core version of major.minor.patch, potentially a pre-release
+  * suffix and potentially build metadata
+  */
 case class Version(
     major: Long,
     minor: Long,
@@ -42,6 +56,9 @@ case class Version(
     build: Option[String]
 ) {
   def coreVersion = CoreVersion(major, minor, patch)
+
+  /** The version, formatted in SemVer format
+    */
   def format: String = {
     val preString =
       pre.map(p => p.map(_.fold(_.toString, _.toString)).mkString_("-", ".", "")).getOrElse("")
