@@ -67,14 +67,14 @@ case class Hyphen(lower: Partial, upper: Partial) extends Simple {
 case class Caret(p: Partial) extends Simple {
   def matches(that: Version): Boolean = matches(that, Strict)
   def matches(that: Version, preBehaviour: PreReleaseBehaviour): Boolean = {
-    val lower = GTE(p)
+    val lower = Matcher.gte(p)
     p match {
       case Wild                => true //^* kinda weird, but whatever
       case Major(m)            => (lower && LT(Major(m + 1))).matches(that, preBehaviour)
       case Minor(major, minor) => (lower && LT(Minor(major, minor + 1))).matches(that, preBehaviour)
       case Patch(0, 0, _)      => Matcher.eqv(p).matches(that, preBehaviour)
       case Patch(0, minor, _)  => (lower && LT(Minor(0, minor + 1))).matches(that, preBehaviour)
-      case Patch(major, _, _)  => (lower && LT(Major(major))).matches(that, preBehaviour)
+      case Patch(major, _, _)  => (lower && LT(Major(major + 1))).matches(that, preBehaviour)
       //^0.0.3-beta := >=0.0.3-beta <0.0.4 Note that prereleases in the 0.0.3 version only will be allowed, if they are greater than or equal to beta
       case Pre(0, 0, pat, _) => (lower && LT(Patch(0, 0, pat + 1))).matches(that, preBehaviour)
       //^1.2.3-beta.2 := >=1.2.3-beta.2 <2.0.0 //1.2.3-beta.4 would be allowed, but 1.2.4-beta.2 would not
