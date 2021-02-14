@@ -1,6 +1,7 @@
 package semver4s
 
 import PreReleaseBehaviour._
+import org.scalacheck.Prop.forAll
 
 class MatcherTest extends munit.ScalaCheckSuite {
   def m(src: String) = matcher(src).toOption.get
@@ -100,6 +101,22 @@ class MatcherTest extends munit.ScalaCheckSuite {
     val notMatching = List("1.2.3-alpha.2", "1.2.3-RC1").map(v)
     for (v <- matching) assert(clue(range).matches(clue(v), clue(Loose)))
     for (v <- notMatching) assert(!clue(range).matches(clue(v), clue(Loose)))
+  }
+
+  test("caret examples") {
+    val range       = m("^2.12.13")
+    val matching    = List("2.12.13", "2.12.20", "2.13.0", "2.13.1", "2.14.0").map(v)
+    val notMatching = List("3.0.0", "3.0.0-RC1").map(v)
+    for (v <- matching) assert(clue(range).matches(clue(v)))
+    for (v <- notMatching) assert(!clue(range).matches(clue(v)))
+  }
+
+  property("caret equivalent to range") {
+    val tilde = m("^2.12.13")
+    val range = m("2.12.13 - 3")
+    forAll(GenVersion.genVersion) { v =>
+      assertEquals(clue(tilde).matches(v), clue(range).matches(clue(v)))
+    }
   }
 
   test("spec example") {

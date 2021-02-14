@@ -13,4 +13,14 @@ object GenVersion {
   val genPre: Gen[SemVer.PreReleaseSuffix] =
     Gen.nonEmptyListOf(genPreId).map(NonEmptyList.fromListUnsafe)
 
+  val genCoreVersion: Gen[CoreVersion] = for {
+    major <- Gen.chooseNum(0L, Long.MaxValue)
+    minor <- Gen.chooseNum(0L, Long.MaxValue)
+    patch <- Gen.chooseNum(0L, Long.MaxValue) if (major, minor, patch) != ((0L, 0L, 0L))
+  } yield CoreVersion(major, minor, patch)
+
+  val genVersion: Gen[Version] = for {
+    core <- genCoreVersion
+    pre  <- Gen.option(genPre)
+  } yield core.toVersion.copy(pre = pre)
 }

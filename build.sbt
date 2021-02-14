@@ -28,7 +28,7 @@ lazy val lib = projectMatrix
   .in(file("semver4s"))
   .settings(
     name := "semver4s",
-    version := "0.2.0",
+    version := "0.2.1",
     crossScalaVersions := List(dottyVersion, scala213Version, scala212Version),
     libraryDependencies ++= List(
       "org.typelevel" %% "cats-parse"       % "0.3.0",
