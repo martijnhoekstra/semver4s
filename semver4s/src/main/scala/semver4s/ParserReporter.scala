@@ -7,7 +7,8 @@ import cats.parse.Parser.Expectation._
 
 /** A reporter for parse errors
   *
-  * Eagerly allocates a LocationMap, which may be expensive.
+  * Eagerly allocates a LocationMap, which may be expensive: in most cases,
+  * you want a def for a new reporter, and/or pass it as a by name argument.
   */
 class Reporter(source: String) {
   val map = LocationMap(source)
