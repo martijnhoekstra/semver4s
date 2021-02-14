@@ -48,8 +48,6 @@ sealed trait Simple extends Matcher
 case class Hyphen(lower: Partial, upper: Partial) extends Simple {
   def matches(version: Version): Boolean = matches(version, Strict)
   def matches(version: Version, pre: PreReleaseBehaviour): Boolean = {
-    implicit val vOrd: Order[Version] = Version.precedence
-    //implicit val preOrd = VersionOrder.preReleaseOrder.toOrdering
     val lowerVersion = lower.version
     val matchesUpper = upper match {
       case Wild                => true
@@ -186,8 +184,6 @@ case class GT(p: Partial) extends Primitive {
 case class GTE(p: Partial) extends Primitive {
   implicit val preReleaseOrder: Order[Option[SemVer.PreReleaseSuffix]] =
     VersionOrder.preReleaseOrder
-  implicit val precedence: Order[Version] = Version.precedence
-
   override def matches(that: Version) = matches(that, Strict)
   override def matches(that: Version, preBehaviour: PreReleaseBehaviour) = p match {
     case Wild         => that.pre.isEmpty || preBehaviour == Loose
@@ -216,7 +212,6 @@ case class GTE(p: Partial) extends Primitive {
 case class LT(p: Partial) extends Primitive {
   implicit val preReleaseOrder: Order[Option[SemVer.PreReleaseSuffix]] =
     VersionOrder.preReleaseOrder
-  implicit val precedence: Order[Version] = Version.precedence
 
   override def matches(that: Version) = matches(that, Strict)
   override def matches(that: Version, preBehaviour: PreReleaseBehaviour): Boolean =
@@ -271,7 +266,6 @@ case class LTE(p: Partial) extends Primitive {
 }
 
 object Matcher {
-  implicit private[this] val precedence: Order[Version] = Version.precedence
 
   /** a matches that matches if the given version is greater than this partial
     */
