@@ -1,12 +1,11 @@
 package semver4s.cli
 
-import cats.syntax.all._
-
 import semver4s._
 
 import cats.effect.IO
 import cats.effect.ExitCode
 import cats.parse.{Parser0, Parser}
+import cats.implicits._
 import com.monovore.decline._
 import com.monovore.decline.effect.CommandIOApp
 
@@ -40,7 +39,7 @@ object SemverApp
           case Exclusive(by) => by.format + " (exclusive)"
         }).pure[Option]
       case (r, vs) =>
-        vs.sorted(Version.precedence.toOrdering).collectFirst {
+        vs.sorted.collectFirst {
           case v if r.matches(v) => v.format
         }
     }
@@ -61,7 +60,7 @@ object SemverApp
           case Exclusive(v) => v.format + " (exclusive)"
         }).pure[Option]
       case (r, vs) =>
-        vs.sorted(Version.precedence.toOrdering).reverse.collectFirst {
+        vs.sorted.reverse.collectFirst {
           case v if r.matches(v) => v.format
         }
     }

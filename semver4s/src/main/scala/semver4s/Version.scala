@@ -22,7 +22,7 @@ object Version {
 
   /** Version order, where each higher version sorts after a lower version
     */
-  val precedence: Order[Version] = {
+  implicit val precedence: Order[Version] = {
     implicit val pre = VersionOrder.preReleaseOrder
     Order.by((v: Version) => (v.major, v.minor, v.patch, v.pre))
   }
