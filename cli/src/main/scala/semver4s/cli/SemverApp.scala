@@ -84,5 +84,8 @@ object SemverApp
 }
 
 abstract class ParserArgument[A](p: Parser0[A]) extends Argument[A] {
-  def read(string: String) = p.parseAll(string).left.map(Reporter.report(_, string)).toValidated
+  def read(input: String) = {
+    def reporter = new Reporter(input)
+    p.parseAll(input).left.map(reporter.report).toValidated
+  }
 }
