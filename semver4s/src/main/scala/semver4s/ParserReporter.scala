@@ -5,23 +5,32 @@ import cats.data.NonEmptyList
 import cats.parse.LocationMap
 import cats.parse.Parser.Expectation._
 
-object Reporter {
+/** A reporter for parse errors
+  *
+  * Eagerly allocates a LocationMap, which may be expensive.
+  */
+class Reporter(source: String) {
+  val map = LocationMap(source)
 
-  def report(error: Parser.Error, source: String): NonEmptyList[String] = {
-    val map = LocationMap(source)
+  /** Gets an error report for the given parse error
+    *
+    * The report consists of a non-empty list of lines describing the error,
+    * the first of which is the line on which the error occurred, and the second
+    * is a caret pointing to the error position in the line.
+    *
+    * Following lines indicate what expectations were violated.
+    */
+  def report(error: Parser.Error): NonEmptyList[String] = {
     def pointer(offset: Int): List[String] = (for {
       (lineNumber, col) <- map.toLineCol(offset)
       line              <- map.getLine(lineNumber)
     } yield List(line, (" " * col) + "^")).getOrElse(Nil)
 
     val errors = error.expected
-      .groupBy(exp => exp.offset)
+      .groupBy(_.offset)
       .map {
         case (offset, expectations) => {
-          val printable = expectations
-            .map(prettyExpectation)
-            .collect { case Some(text) => text }
-            .toList
+          val printable = expectations.map(prettyExpectation).collect { case Some(text) => text }
           val reasons = (printable: @unchecked) match {
             case Nil         => Nil
             case head :: Nil => List(s"Expected $head")
@@ -36,7 +45,12 @@ object Reporter {
     NonEmptyList.fromListUnsafe(errors.toList)
   }
 
-  def prettyExpectation(exp: Parser.Expectation) = {
+  /** Pretty-prints an expectation, if we know how to.
+    *
+    * Pretty-printing is done for OneOfStr, InRange, StartOfString, EndOfString,
+    * Length and FailWith.
+    */
+  def prettyExpectation(exp: Parser.Expectation): Option[String] = {
     val pf: PartialFunction[Parser.Expectation, String] = {
       case OneOfStr(_, options) =>
         s"one of the following: " + options.map(str => s"'$str'").mkString(", ")
@@ -51,6 +65,12 @@ object Reporter {
     pf.lift(exp)
   }
 
+  /** Get a human-readable representation of some character.
+    *
+    * If the character is an ASCII printable character, itself.
+    * Otherwise, include its name, Unicode codepoint, well-known escape sequence
+    * as applicable.
+    */
   def charInfo(ch: Char): String = {
     val asU = "\\u" + ch.toInt.toHexString
     val printable = Set(
