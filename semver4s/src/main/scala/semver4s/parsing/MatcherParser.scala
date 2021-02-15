@@ -1,10 +1,14 @@
-package semver4s
+package semver4s.parsing
 
 import cats.parse.{Parser => P}
 import cats.data.NonEmptyList
 
-object RangeParsers {
-  import SemverParsers._
+object MatcherParser {
+  import semver4s.Partial
+  import semver4s.Partial._
+  import semver4s.Matcher
+  import semver4s.Matcher._
+  import SemverParser._
   /*
   A version range is a set of comparators which specify versions that satisfy the range.
   A comparator is composed of an operator and a version. The set of primitive operators is:

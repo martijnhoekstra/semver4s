@@ -1,11 +1,13 @@
-package semver4s
+package semver4s.parsing
 
 import cats.implicits._
 import cats.parse.{Parser => P, Numbers}
 import cats.data.NonEmptyList
 import scala.util.control.NonFatal
+import semver4s.CoreVersion
+import semver4s.Version
 
-object SemverParsers {
+object SemverParser {
   type PreIdentifier = Either[String, Long]
   val int       = Numbers.bigInt.collect { case bi if bi.isValidInt && bi >= 0 => bi.intValue }
   val long      = Numbers.bigInt.collect { case bi if bi.isValidLong && bi >= 0 => bi.longValue }
