@@ -28,7 +28,7 @@ lazy val lib = projectMatrix
   .in(file("semver4s"))
   .settings(
     name := "semver4s",
-    version := "0.2.1",
+    version := "0.3.0",
     crossScalaVersions := List(dottyVersion, scala213Version, scala212Version),
     libraryDependencies ++= List(
       "org.typelevel" %% "cats-parse"       % "0.3.0",
@@ -48,7 +48,7 @@ lazy val cli = projectMatrix
   .settings(
     crossScalaVersions := List(scala213Version, scala212Version),
     name := "semver4s-cli",
-    version := "1.0.1",
+    version := "1.0.2",
     libraryDependencies ++= List(
       "com.monovore" %% "decline"        % "1.3.0",
       "com.monovore" %% "decline-effect" % "1.3.0"
