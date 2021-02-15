@@ -61,4 +61,25 @@ class SemverParserTest extends munit.ScalaCheckSuite {
       }
     }
   }
+
+  property("valid semver strings round-trip with format") {
+    forAll(genSemVer) { (sv: String) =>
+      {
+        val Right(version) = SemverParsers.semver.parseAll(sv)
+        assertEquals(sv, version.format)
+      }
+    }
+  }
+
+  property("valid semver version round-trips with parse") {
+    forAll(GenVersion.genVersion) { (v: Version) =>
+      {
+        val str   = v.format
+        val parse = SemverParsers.semver.parseAll(str)
+        assert(parse.isRight)
+        val Right(parsed) = parse
+        assertEquals(v, parsed)
+      }
+    }
+  }
 }
