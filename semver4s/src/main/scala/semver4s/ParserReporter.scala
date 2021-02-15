@@ -1,4 +1,4 @@
-package semver4s.cli
+package semver4s
 
 import cats.parse.Parser
 import cats.data.NonEmptyList
