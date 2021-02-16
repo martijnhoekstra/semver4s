@@ -1,30 +1,10 @@
-/*
- * Copyright (c) 2020 Typelevel
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy of
- * this software and associated documentation files (the "Software"), to deal in
- * the Software without restriction, including without limitation the rights to
- * use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
- * the Software, and to permit persons to whom the Software is furnished to do so,
- * subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
- * FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
- * COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
- * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
- * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- */
-
 package semver4s
 
 import org.scalacheck.Prop.forAll
 import org.scalacheck.Gen
 
 class SemverParserTest extends munit.ScalaCheckSuite {
+  import parsing.SemverParser
 
   val genPreRelease = Gen.oneOf("-alpha", "-beta", "-alpha.1")
   val genMetadata =
@@ -41,7 +21,7 @@ class SemverParserTest extends munit.ScalaCheckSuite {
   property("semver parses prerelease") {
     forAll(genPreRelease) { (pre: String) =>
       {
-        assertEquals(SemverParsers.preRelease.string.parseAll(pre), Right(pre))
+        assertEquals(SemverParser.preRelease.string.parseAll(pre), Right(pre))
       }
     }
   }
@@ -49,7 +29,7 @@ class SemverParserTest extends munit.ScalaCheckSuite {
   property(("semver parsers metadata")) {
     forAll(genMetadata) { (meta: String) =>
       {
-        assertEquals(SemverParsers.build.string.parseAll(meta), Right(meta))
+        assertEquals(SemverParser.build.string.parseAll(meta), Right(meta))
       }
     }
   }
@@ -57,7 +37,7 @@ class SemverParserTest extends munit.ScalaCheckSuite {
   property("semver parses SemVer") {
     forAll(genSemVer) { (sv: String) =>
       {
-        assertEquals(SemverParsers.semver.string.parseAll(sv), Right(sv))
+        assertEquals(SemverParser.semver.string.parseAll(sv), Right(sv))
       }
     }
   }
@@ -65,7 +45,7 @@ class SemverParserTest extends munit.ScalaCheckSuite {
   property("valid semver strings round-trip with format") {
     forAll(genSemVer) { (sv: String) =>
       {
-        val Right(version) = SemverParsers.semver.parseAll(sv)
+        val Right(version) = SemverParser.semver.parseAll(sv)
         assertEquals(sv, version.format)
       }
     }
@@ -75,7 +55,7 @@ class SemverParserTest extends munit.ScalaCheckSuite {
     forAll(GenVersion.genVersion) { (v: Version) =>
       {
         val str   = v.format
-        val parse = SemverParsers.semver.parseAll(str)
+        val parse = SemverParser.semver.parseAll(str)
         assert(parse.isRight)
         val Right(parsed) = parse
         assertEquals(v, parsed)

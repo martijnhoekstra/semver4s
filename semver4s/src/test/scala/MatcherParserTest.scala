@@ -2,12 +2,13 @@ package semver4s
 
 import org.scalacheck.Prop.forAll
 
-class RangeParserTest extends munit.ScalaCheckSuite {
+class MatcherParserTest extends munit.ScalaCheckSuite {
   import GenMatcher._
+  import semver4s.parsing.MatcherParser
 
   test("primitive range examples") {
     val comparators = List(">", "=", "<", ">=", "<=").map(_ + "1.2.3")
-    comparators.map(RangeParsers.primitive.parseAll).foreach { r =>
+    comparators.map(MatcherParser.primitive.parseAll).foreach { r =>
       assert(r.isRight, clue(r))
     }
   }
@@ -15,7 +16,7 @@ class RangeParserTest extends munit.ScalaCheckSuite {
   property("all primitive ranges parse") {
     forAll(genPrimitive) { (range) =>
       {
-        def parsed = RangeParsers.primitive.parseAll(range)
+        def parsed = MatcherParser.primitive.parseAll(range)
         assert(parsed.isRight, clue(range))
       }
     }
@@ -26,49 +27,49 @@ class RangeParserTest extends munit.ScalaCheckSuite {
       x      <- List("X", "x", "*")
       prefix <- List("1.", "1.2.")
     } {
-      val result = RangeParsers.partial.parseAll(prefix + x)
+      val result = MatcherParser.partial.parseAll(prefix + x)
       assert(result.isRight, clue(result))
     }
   }
 
   test("partial range examples") {
     List("1", "1.2").foreach { r =>
-      val result = RangeParsers.partial.parseAll(r)
+      val result = MatcherParser.partial.parseAll(r)
       assert(clue(result).isRight, clue(r))
     }
   }
 
   property("all partial and x ranges parse") {
     forAll(genPartial) { range =>
-      def parsed = RangeParsers.partial.parseAll(range)
+      def parsed = MatcherParser.partial.parseAll(range)
       assert(parsed.isRight, clue(range))
     }
   }
 
   test("hyphen range examples") {
     List("1.2.3 - 2.3.4", "1.2 - 2.3.4", "1.2.3 - 2.3", "1.2.3 - 2").foreach { r =>
-      val result = RangeParsers.hyphen.parseAll(r)
+      val result = MatcherParser.hyphen.parseAll(r)
       assert(clue(result).isRight, clue(r))
     }
   }
 
   property("all hyphen ranges parse") {
     forAll(genHyphenRange) { range =>
-      def parsed = RangeParsers.hyphen.parseAll(range)
+      def parsed = MatcherParser.hyphen.parseAll(range)
       assert(parsed.isRight, clue(range))
     }
   }
 
   test("tilde examples") {
     List("~1.2.3", "~1.2", "~1", "~0.2.3", "~0.2", "~0", "~1.2.3-beta.2").foreach { r =>
-      val result = RangeParsers.tilde.parseAll(r)
+      val result = MatcherParser.tilde.parseAll(r)
       assert(clue(result).isRight, clue(r))
     }
   }
 
   property("all tilde ranges parse") {
     forAll(genTildeRange) { range =>
-      def parsed = RangeParsers.tilde.parseAll(range)
+      def parsed = MatcherParser.tilde.parseAll(range)
       assert(parsed.isRight, clue(range))
     }
   }
@@ -86,42 +87,42 @@ class RangeParserTest extends munit.ScalaCheckSuite {
       "^0.x",
       "^1.x"
     ).foreach { r =>
-      val result = RangeParsers.caret.parseAll(r)
+      val result = MatcherParser.caret.parseAll(r)
       assert(clue(result).isRight, clue(r))
     }
   }
 
   property("all caret ranges parse") {
     forAll(genCaretRange) { range =>
-      def parsed = RangeParsers.caret.parseAll(range)
+      def parsed = MatcherParser.caret.parseAll(range)
       assert(parsed.isRight, clue(range))
     }
   }
 
   test("range examples") {
     List(">=1.2.7 <1.3.0").foreach { r =>
-      val result = RangeParsers.range.parseAll(r)
+      val result = MatcherParser.range.parseAll(r)
       assert(clue(result).isRight, clue(r))
     }
   }
 
   property("all ranges parse") {
     forAll(genRange) { range =>
-      def parsed = RangeParsers.range.parseAll(range)
+      def parsed = MatcherParser.range.parseAll(range)
       assert(parsed.isRight, clue(range))
     }
   }
 
   test("range set examples") {
     List("1.x || >=2.5.0 || 5.0.0 - 7.2.3", "1.2.7 || >=1.2.9 <2.0.0").foreach { r =>
-      val result = RangeParsers.rangeSet.parseAll(r)
+      val result = MatcherParser.rangeSet.parseAll(r)
       assert(clue(result).isRight, clue(r))
     }
   }
 
   property("all range sets parse") {
     forAll(genRangeSet) { range =>
-      def parsed = RangeParsers.rangeSet.parseAll(range)
+      def parsed = MatcherParser.rangeSet.parseAll(range)
       assert(parsed.isRight, clue(range))
     }
   }

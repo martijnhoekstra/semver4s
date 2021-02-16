@@ -9,6 +9,9 @@ import cats.implicits._
 import com.monovore.decline._
 import com.monovore.decline.effect.CommandIOApp
 
+import semver4s.Bound._
+import cats.data.NonEmptyList
+
 object SemverApp
     extends CommandIOApp(
       name = "semVer",
@@ -18,7 +21,7 @@ object SemverApp
   override def main = inc.orElse(min).orElse(max)
 
   val version  = Opts.argument[Version](metavar = "version")
-  val versions = Opts.argument[List[Version]](metavar = "versions")
+  val versions = Opts.argument[NonEmptyList[Version]](metavar = "versions")
   val range    = Opts.argument[Matcher](metavar = "range")
 
   val inc = Opts.subcommand("inc", "increment the version") {
@@ -31,14 +34,14 @@ object SemverApp
     "min",
     "print the lowest version that satisfies some range. If a list of versions is given, the version must be from that list"
   ) {
-    val toPrint = (range, versions).mapN {
-      case (r, Nil) =>
+    val toPrint = (range, versions.orNone).mapN {
+      case (r, None) =>
         (Matcher.lowerBound(r) match {
           case Unbounded     => "0.0.0"
           case Inclusive(by) => by.format
           case Exclusive(by) => by.format + " (exclusive)"
         }).pure[Option]
-      case (r, vs) =>
+      case (r, Some(vs)) =>
         vs.sorted.collectFirst {
           case v if r.matches(v) => v.format
         }
@@ -52,14 +55,14 @@ object SemverApp
     "max",
     "print the highest version that satisfies some range. If a list of versions is given, the version must be from that list"
   ) {
-    val toPrint = (range, versions).mapN {
-      case (r, Nil) =>
+    val toPrint = (range, versions.orNone).mapN {
+      case (r, None) =>
         (Matcher.upperBound(r) match {
           case Unbounded    => "unbounded"
           case Inclusive(v) => v.format
           case Exclusive(v) => v.format + " (exclusive)"
         }).pure[Option]
-      case (r, vs) =>
+      case (r, Some(vs)) =>
         vs.sorted.reverse.collectFirst {
           case v if r.matches(v) => v.format
         }
@@ -69,15 +72,15 @@ object SemverApp
     )
   }
 
-  implicit def versionArgument: Argument[Version] = new ParserArgument(semVer) {
+  implicit def versionArgument: Argument[Version] = new ParserArgument(semverParser) {
     def defaultMetavar = "major.minor.patch(-pre)?(+bld)?"
   }
-  implicit def versionsArgument: Argument[List[Version]] =
-    new ParserArgument(semVer.repSep0(Parser.char(';'))) {
+  implicit def versionsArgument: Argument[NonEmptyList[Version]] =
+    new ParserArgument(semverParser.repSep(Parser.char(';'))) {
       def defaultMetavar = "major.minor.patch(-pre)?(+bld)?(;major.minor.patch(-pre)?(+bld)?)*"
     }
 
-  implicit def rangeArgument: Argument[Matcher] = new ParserArgument[Matcher](semVerMatcher) {
+  implicit def rangeArgument: Argument[Matcher] = new ParserArgument[Matcher](matcherParser) {
     def defaultMetavar = "major.minor.patch(-pre)?(+bld)?"
   }
 }

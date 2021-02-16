@@ -1,7 +1,9 @@
 package object semver4s {
-  val semVer        = SemverParsers.semver
-  val semVerMatcher = RangeParsers.rangeSet
+  import parsing._
 
-  def matcher(src: String) = RangeParsers.rangeSet.parseAll(src)
-  def version(src: String) = SemverParsers.semver.parseAll(src)
+  val semverParser  = SemverParser.semver
+  val matcherParser = MatcherParser.rangeSet
+
+  def matcher(src: String) = matcherParser.parseAll(src)
+  def version(src: String) = semverParser.parseAll(src)
 }

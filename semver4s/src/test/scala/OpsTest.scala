@@ -1,7 +1,5 @@
 package semver4s
 
-//import org.scalacheck.Prop.forAll
-
 class OpsTest extends munit.ScalaCheckSuite {
   def v(src: String) = version(src).toOption.get
 
