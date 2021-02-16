@@ -17,6 +17,9 @@ ThisBuild / developers := List(
   )
 )
 
+//a subproject "semver4s" gets automatically created
+//and aggregates all subprojects.
+//I don't think you can disable that project, only rename it
 //lazy val global = project
 //  .in(file("."))
 //  .aggregate(lib, cli)
@@ -35,6 +38,10 @@ lazy val lib = projectMatrix
       "org.scalameta" %% "munit"            % "0.7.21",
       "org.scalameta" %% "munit-scalacheck" % "0.7.21"
     ),
+    libraryDependencies ++= List(
+      "org.scala-lang" % "scala-reflect" % scalaVersion.value % "provided"
+    )
+      .filter(_ => scalaVersion.value.startsWith("2")),
     publishTo := sonatypePublishToBundle.value,
     sonatypeProjectHosting := Some(
       GitHubHosting("martijnhoekstra", "semver4s", "martijnhoekstra@gmail.com")

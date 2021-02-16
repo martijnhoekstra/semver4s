@@ -29,10 +29,9 @@ object MatcherParser {
     object EQ  extends SimpleOp
   }
 
-  val star = P.charIn("xX*")
-
   val partial: P[Partial] = {
-    val s = star.as(Nil -> None)
+    val star = P.charIn("xX*")
+    val s    = star.as(Nil -> None)
 
     val patch = (long ~ preRelease.?)
     val minor = long ~ {
@@ -89,6 +88,8 @@ object MatcherParser {
 
   val logicalOr = P.string("||").surroundedBy(P.char(' ').rep)
   val rangeSet  = range.repSep(logicalOr).map(Or(_))
+
+  val matcher: P[Matcher] = rangeSet
 
   def hyphenRange(lower: Partial, upper: Partial) = Hyphen(lower, upper)
 
