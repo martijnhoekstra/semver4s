@@ -31,9 +31,9 @@ lazy val lib = projectMatrix
     version := "0.3.0",
     crossScalaVersions := List(dottyVersion, scala213Version, scala212Version),
     libraryDependencies ++= List(
-      "org.typelevel" %% "cats-parse"       % "0.3.0",
-      "org.scalameta" %% "munit"            % "0.7.22",
-      "org.scalameta" %% "munit-scalacheck" % "0.7.22"
+      "org.typelevel" %% "cats-parse"       % "0.3.1",
+      "org.scalameta" %% "munit"            % "0.7.21",
+      "org.scalameta" %% "munit-scalacheck" % "0.7.21"
     ),
     publishTo := sonatypePublishToBundle.value,
     sonatypeProjectHosting := Some(
