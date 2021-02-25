@@ -32,11 +32,10 @@ lazy val lib = projectMatrix
   .settings(
     name := "semver4s",
     version := "0.3.0",
-    crossScalaVersions := List(dottyVersion, scala213Version, scala212Version),
     libraryDependencies ++= List(
       "org.typelevel" %% "cats-parse"       % "0.3.1",
-      "org.scalameta" %% "munit"            % "0.7.22",
-      "org.scalameta" %% "munit-scalacheck" % "0.7.22"
+      "org.scalameta" %% "munit"            % "0.7.22" % "test",
+      "org.scalameta" %% "munit-scalacheck" % "0.7.22" % "test"
     ),
     libraryDependencies ++= List(
       "org.scala-lang" % "scala-reflect" % scalaVersion.value % "provided"
@@ -53,14 +52,27 @@ lazy val lib = projectMatrix
 lazy val cli = projectMatrix
   .in(file("cli"))
   .settings(
-    crossScalaVersions := List(scala213Version, scala212Version),
     name := "semver4s-cli",
     version := "1.0.2",
     libraryDependencies ++= List(
       "com.monovore" %% "decline"        % "1.3.0",
       "com.monovore" %% "decline-effect" % "1.3.0"
-    )
+    ),
   )
   .dependsOn(lib)
   .jvmPlatform(scalaVersions = List(scala212Version, scala213Version))
+  .jsPlatform(scalaVersions = List(scala212Version, scala213Version))
+
+
+lazy val npmfacade = projectMatrix.in(file("npmfacade"))
+  .enablePlugins(ScalaJSBundlerPlugin)
+  .settings(
+    name := "npmFacade",
+    version := "0.0.1",
+    npmDependencies in Test += "semver" -> "7.3.4",
+    libraryDependencies ++= List(
+      "org.scalameta" %% "munit"            % "0.7.22" % "test",
+      "org.scalameta" %% "munit-scalacheck" % "0.7.22" % "test")
+  )
+  .dependsOn(lib  % "compile->compile;test->test")
   .jsPlatform(scalaVersions = List(scala212Version, scala213Version))
