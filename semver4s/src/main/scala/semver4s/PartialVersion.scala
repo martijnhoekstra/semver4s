@@ -38,6 +38,9 @@ object Partial {
     case Major(major) => s"$major.*"
     case Minor(major, minor) => s"$major.$minor.*"
     case Patch(major, minor, patch) => s"$major.$minor.$patch"
-    case Pre(major, minor, patch, pre) => s"$major.$minor.$patch-$pre"
+    case Pre(major, minor, patch, pre) => {
+      val preString = pre.toList.map(_.fold(identity, _.toString)).mkString(".")
+      s"$major.$minor.$patch-$preString"
+    }
   }
 }
