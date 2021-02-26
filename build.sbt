@@ -16,6 +16,7 @@ ThisBuild / developers := List(
     url = url("https://www.github.com")
   )
 )
+ThisBuild / parallelExecution := false
 
 //a subproject "semver4s" gets automatically created
 //and aggregates all subprojects.
