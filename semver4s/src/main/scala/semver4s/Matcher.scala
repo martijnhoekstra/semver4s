@@ -119,7 +119,9 @@ object Matcher {
     }
   }
 
-  sealed trait Primitive extends Simple
+  sealed trait Primitive extends Simple {
+    def p: Partial
+  }
   case class Exact(p: Partial) extends Primitive {
     override def matches(that: Version) = matches(that, Strict)
     override def matches(that: Version, preBehaviour: PreReleaseBehaviour) = p match {
@@ -386,5 +388,18 @@ object Matcher {
   }
   private def minUpper(b1: Bound, b2: Bound): Bound = if (maxUpper(b1, b2) == b1) b2 else b1
   private def minLower(b1: Bound, b2: Bound): Bound = if (maxLower(b1, b2) == b1) b2 else b1
+
+  def print(m: Matcher): String = m match {
+    case And(simples) => simples.toList.map(print).mkString(" ")
+    case Or(ands) => ands.toList.map(print).mkString(" || ")
+    case Caret(p) => s"^$p"
+    case Tilde(p) => s"~$p"
+    case Hyphen(lower, upper) => s"$lower - $upper"
+    case Exact(p) => p.toString()
+    case GT(p) => s">$p"
+    case GTE(p) => s">=$p"
+    case LT(p) => s"<$p"
+    case LTE(p) => s"<=$p"
+  }
 
 }
