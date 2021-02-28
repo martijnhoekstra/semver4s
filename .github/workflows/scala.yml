@@ -17,18 +17,12 @@ jobs:
       uses: actions/setup-java@v1
       with:
         java-version: 1.8
-    - name: scoverage
-      run: sbt --client "project lib" clean coverage test coverageReport
+    - name: test/coverage
+      run: sbt --client clean coverage test coverageReport
     - name: upload coverage
       uses: codecov/codecov-action@v1
       with:
         files: semver4s/target/jvm-2.13/scoverage-report/scoverage.xml
-    - name: compile
-      run: sbt --client clean compile
-    - name: link
-      run: sbt --client fastLinkJS
-    - name: test
-      run: sbt --client test
     - name: Check scalafmt
       run: sbt --client scalafmtCheckAll
     - name: Check scalafmt of sbt files
