@@ -25,6 +25,8 @@ jobs:
         files: semver4s/target/jvm-2.13/scoverage-report/scoverage.xml
     - name: compile
       run: sbt --client clean compile
+    - name: link
+      run: sbt --client fastLinkJS
     - name: test
       run: sbt --client test
     - name: Check scalafmt

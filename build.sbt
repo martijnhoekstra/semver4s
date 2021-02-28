@@ -16,7 +16,17 @@ ThisBuild / developers := List(
     url = url("https://www.github.com")
   )
 )
-ThisBuild / parallelExecution := false
+
+//attempt not to grind to a halt
+ThisBuild / concurrentRestrictions ++= {
+  if (sys.env.contains("CI")) List(Tags.limitAll(2)) else Nil
+}
+
+val batchModeOnCI =
+  if (sys.env.contains("CI")) List(scalaJSLinkerConfig ~= {
+    _.withBatchMode(true)
+  })
+  else Nil
 
 //a subproject "semver4s" gets automatically created
 //and aggregates all subprojects.
@@ -46,11 +56,10 @@ lazy val lib = projectMatrix
     sonatypeProjectHosting := Some(
       GitHubHosting("martijnhoekstra", "semver4s", "martijnhoekstra@gmail.com")
     ),
-    scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.CommonJSModule) }
-
   )
   .jvmPlatform(scalaVersions = List(dottyVersion, scala212Version, scala213Version))
-  .jsPlatform(scalaVersions = List(dottyVersion, scala212Version, scala213Version))
+  .jsPlatform(scalaVersions = List(dottyVersion, scala212Version, scala213Version),
+    settings = (scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.CommonJSModule) }) :: batchModeOnCI)
 
 lazy val cli = projectMatrix
   .in(file("cli"))
@@ -61,11 +70,11 @@ lazy val cli = projectMatrix
       "com.monovore" %%% "decline"        % "1.3.0",
       "com.monovore" %%% "decline-effect" % "1.3.0"
     ),
-    scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.CommonJSModule) }
   )
   .dependsOn(lib)
   .jvmPlatform(scalaVersions = List(scala212Version, scala213Version))
-  .jsPlatform(scalaVersions = List(scala212Version, scala213Version))
+  .jsPlatform(scalaVersions = List(scala212Version, scala213Version),
+    settings = (scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.CommonJSModule) }) :: batchModeOnCI)
 
 
 lazy val npmfacade =  projectMatrix.in(file("npmfacade"))
@@ -78,8 +87,8 @@ lazy val npmfacade =  projectMatrix.in(file("npmfacade"))
     libraryDependencies ++= List(
       "org.scalameta" %%% "munit"            % "0.7.22" % "test",
       "org.scalameta" %%% "munit-scalacheck" % "0.7.22" % "test"),
-    scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.CommonJSModule) }
   )
-  .jsPlatform(scalaVersions = List(dottyVersion, scala213Version))
+  .jsPlatform(scalaVersions = List(dottyVersion, scala213Version),
+    settings = (scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.CommonJSModule) }) :: batchModeOnCI)
   .dependsOn(lib % "compile->compile;test->test")
   
