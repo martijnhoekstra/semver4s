@@ -122,8 +122,20 @@ class MatcherParserTest extends munit.ScalaCheckSuite {
 
   property("all range sets parse") {
     forAll(genRangeSet) { range =>
-      def parsed = MatcherParser.rangeSet.parseAll(range)
+      val parsed = MatcherParser.rangeSet.parseAll(range)
       assert(parsed.isRight, clue(range))
+    }
+  }
+
+  property("all range sets round-trip") {
+    forAll(genRangeSet) { range =>
+      for(matcher <- MatcherParser.rangeSet.parseAll(range)) {
+        val formatted1 = Matcher.print(matcher)
+        val matcher2 = MatcherParser.rangeSet.parseAll(formatted1).toOption.get
+        val formatted2 = Matcher.print(matcher2)
+        assertEquals(clue(formatted1), clue(formatted2))
+        assertEquals(clue(matcher), clue(matcher2))
+      }
     }
   }
 

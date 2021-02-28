@@ -23,8 +23,12 @@ jobs:
       uses: codecov/codecov-action@v1
       with:
         files: semver4s/target/jvm-2.13/scoverage-report/scoverage.xml
-    - name: Run tests
-      run: sbt --client clean test
+    - name: compile
+      run: sbt --client clean compile
+    - name: link
+      run: sbt --client fastLinkJS
+    - name: test
+      run: sbt --client test
     - name: Check scalafmt
       run: sbt --client scalafmtCheckAll
     - name: Check scalafmt of sbt files

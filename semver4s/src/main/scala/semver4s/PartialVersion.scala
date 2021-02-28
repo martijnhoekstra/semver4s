@@ -3,6 +3,7 @@ package semver4s
 sealed trait Partial {
   def increment: Partial
   def version: Version
+  override def toString() = Partial.print(this)
 }
 
 object Partial {
@@ -30,5 +31,16 @@ object Partial {
       extends Partial {
     def increment = ???
     def version   = Version(major, minor, patch, Some(pre), None)
+  }
+
+  def print(p: Partial): String = p match {
+    case Wild => "*"
+    case Major(major) => s"$major.*"
+    case Minor(major, minor) => s"$major.$minor.*"
+    case Patch(major, minor, patch) => s"$major.$minor.$patch"
+    case Pre(major, minor, patch, pre) => {
+      val preString = pre.toList.map(_.fold(identity, _.toString)).mkString(".")
+      s"$major.$minor.$patch-$preString"
+    }
   }
 }

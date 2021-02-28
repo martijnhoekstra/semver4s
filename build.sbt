@@ -17,6 +17,17 @@ ThisBuild / developers := List(
   )
 )
 
+//attempt not to grind to a halt
+ThisBuild / concurrentRestrictions ++= {
+  if (sys.env.contains("CI")) List(Tags.limitAll(2)) else Nil
+}
+
+val batchModeOnCI =
+  if (sys.env.contains("CI")) List(scalaJSLinkerConfig ~= {
+    _.withBatchMode(true)
+  })
+  else Nil
+
 //a subproject "semver4s" gets automatically created
 //and aggregates all subprojects.
 //I don't think you can disable that project, only rename it
@@ -33,9 +44,9 @@ lazy val lib = projectMatrix
     name := "semver4s",
     version := "0.3.0",
     libraryDependencies ++= List(
-      "org.typelevel" %% "cats-parse"       % "0.3.1",
-      "org.scalameta" %% "munit"            % "0.7.22" % "test",
-      "org.scalameta" %% "munit-scalacheck" % "0.7.22" % "test"
+      "org.typelevel" %%% "cats-parse"       % "0.3.1",
+      "org.scalameta" %%% "munit"            % "0.7.22" % "test",
+      "org.scalameta" %%% "munit-scalacheck" % "0.7.22" % "test"
     ),
     libraryDependencies ++= List(
       "org.scala-lang" % "scala-reflect" % scalaVersion.value % "provided"
@@ -44,10 +55,11 @@ lazy val lib = projectMatrix
     publishTo := sonatypePublishToBundle.value,
     sonatypeProjectHosting := Some(
       GitHubHosting("martijnhoekstra", "semver4s", "martijnhoekstra@gmail.com")
-    )
+    ),
   )
   .jvmPlatform(scalaVersions = List(dottyVersion, scala212Version, scala213Version))
-  .jsPlatform(scalaVersions = List(dottyVersion, scala212Version, scala213Version))
+  .jsPlatform(scalaVersions = List(dottyVersion, scala212Version, scala213Version),
+    settings = (scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.CommonJSModule) }) :: batchModeOnCI)
 
 lazy val cli = projectMatrix
   .in(file("cli"))
@@ -55,24 +67,28 @@ lazy val cli = projectMatrix
     name := "semver4s-cli",
     version := "1.0.2",
     libraryDependencies ++= List(
-      "com.monovore" %% "decline"        % "1.3.0",
-      "com.monovore" %% "decline-effect" % "1.3.0"
+      "com.monovore" %%% "decline"        % "1.3.0",
+      "com.monovore" %%% "decline-effect" % "1.3.0"
     ),
   )
   .dependsOn(lib)
   .jvmPlatform(scalaVersions = List(scala212Version, scala213Version))
-  .jsPlatform(scalaVersions = List(scala212Version, scala213Version))
+  .jsPlatform(scalaVersions = List(scala212Version, scala213Version),
+    settings = (scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.CommonJSModule) }) :: batchModeOnCI)
 
 
-lazy val npmfacade = projectMatrix.in(file("npmfacade"))
+lazy val npmfacade =  projectMatrix.in(file("npmfacade"))
   .enablePlugins(ScalaJSBundlerPlugin)
   .settings(
+    testFrameworks += new TestFramework("munit.Framework"),
     name := "npmFacade",
     version := "0.0.1",
     npmDependencies in Test += "semver" -> "7.3.4",
     libraryDependencies ++= List(
-      "org.scalameta" %% "munit"            % "0.7.22" % "test",
-      "org.scalameta" %% "munit-scalacheck" % "0.7.22" % "test")
+      "org.scalameta" %%% "munit"            % "0.7.22" % "test",
+      "org.scalameta" %%% "munit-scalacheck" % "0.7.22" % "test"),
   )
-  .dependsOn(lib  % "compile->compile;test->test")
-  .jsPlatform(scalaVersions = List(scala212Version, scala213Version))
+  .jsPlatform(scalaVersions = List(dottyVersion, scala213Version),
+    settings = (scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.CommonJSModule) }) :: batchModeOnCI)
+  .dependsOn(lib % "compile->compile;test->test")
+  

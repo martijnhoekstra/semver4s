@@ -22,10 +22,20 @@ class Reporter(source: String) {
     * Following lines indicate what expectations were violated.
     */
   def report(error: Parser.Error): NonEmptyList[String] = {
-    def pointer(offset: Int): List[String] = (for {
+    def pointer(offset: Int, maxWidth: Int): List[String] = (for {
       (lineNumber, col) <- map.toLineCol(offset)
       line              <- map.getLine(lineNumber)
-    } yield List(line, (" " * col) + "^")).getOrElse(Nil)
+    } yield {
+      val startIndex = if (line.length <= maxWidth) 0
+      else {
+        val leadingTarget = (0.8 * maxWidth).toInt
+        val leading = math.min(col, leadingTarget)
+        col - leading
+      }
+      val lineSegment = line.drop(startIndex).take(maxWidth)
+      val p = " " * (col - startIndex) + "^"
+      List(lineSegment, p)
+    }).getOrElse(Nil)
 
     val errors = error.expected
       .groupBy(_.offset)
@@ -38,7 +48,7 @@ class Reporter(source: String) {
             case head :: (init :+ last) =>
               (s"Expected $head" :: init).map(reason => s"$reason or") ::: List(last)
           }
-          pointer(offset) ::: reasons
+          pointer(offset, 60) ::: reasons
         }
       }
       .flatten
@@ -53,9 +63,11 @@ class Reporter(source: String) {
     */
   def prettyExpectation(exp: Parser.Expectation): Option[String] = {
     val pf: PartialFunction[Parser.Expectation, String] = {
+      case OneOfStr(_, List(opt)) => s""""$opt""""
       case OneOfStr(_, options) =>
-        s"one of the following: " + options.map(str => s"'$str'").mkString(", ")
+        s"one of the following: " + options.map(str => s""""$str"""").mkString(", ")
       case InRange(_, lower, upper) if (lower == upper) => s"character ${charInfo(lower)}"
+      case InRange(_, lower, upper) if (lower + 1 == upper) => s"character ${charInfo(lower)} or ${charInfo(upper)}}"
       case InRange(_, lower, upper) =>
         s"a character between ${charInfo(lower)} and ${charInfo(upper)}"
       case StartOfString(_)            => "the start of input"
@@ -93,9 +105,9 @@ class Reporter(source: String) {
     else if (Character.isLowSurrogate(ch)) s"low surrogate $asU"
     else if (Character.isHighSurrogate(ch)) s"high surrogate $asU"
     else {
-      val name = Character.getName(ch.toInt)
+      val name = "uncommon character" // Character.getName(ch.toInt)
       if (Character.isLetterOrDigit(ch)) s"'$ch': $name, codepoint $asU"
-      else if (Character.isWhitespace(ch)) s"$name, codepoint $asU"
+      else if (Character.isWhitespace(ch)) s"whitespace character, codepoint $asU"
       else if (name.isEmpty) s"non-character $asU"
       else if (Character.isISOControl(ch)) s"control character $asU"
       else if (printable.contains(Character.getType(ch).toByte)) s"'$ch': $name, codepoint $asU"

@@ -4,7 +4,7 @@ import scala.scalajs.js
 import js.annotation._
 
 @js.native
-@JSImport("semver", "semver")
+@JSImport("semver/index.js", JSImport.Namespace)
 @annotation.nowarn("msg=parameter value")
 object NPMSemver extends js.Object {
   /** returns identity if valid, or null if invalid */

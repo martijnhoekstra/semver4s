@@ -16,7 +16,6 @@ object GenMatcher {
       Gen.chooseNum(0L, Long.MaxValue).map(_.toString()),
       Gen.stringOf(genIdChar).filterNot(_.isEmpty())
     )
-    .map("-" + _)
 
   val genPre = Gen.nonEmptyListOf(genId).map(_.mkString("-", ".", ""))
 
@@ -53,7 +52,7 @@ object GenMatcher {
 
   val genHyphenRange = for {
     from <- genPartial
-    to   <- genPartial
+    to   <- genPartial if from != "" && to != ""
   } yield s"$from - $to"
 
   val genTildeRange = genPartial.map("~" + _)
