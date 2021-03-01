@@ -16,11 +16,11 @@ object NPMSemver extends js.Object {
   /** returns true if the first string represents a SemVer version that's greater
     * than the semver version represented by the second string
     **/
-  def gt(first: String, second: String): String = js.native
+  def gt(first: String, second: String): Boolean = js.native
   /** returns true if the first string represents a SemVer version that's smaller
     * than the semver version represented by the second string
     **/
-  def lt(first: String, second: String): String = js.native
+  def lt(first: String, second: String): Boolean = js.native
   /** returns the smallest version that matches the given range */
   def minVersion(rangeString: String): String = js.native
   /** This aims to provide a very forgiving translation of a non-semver string
