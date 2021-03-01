@@ -86,7 +86,9 @@ lazy val npmfacade =  projectMatrix.in(file("npmfacade"))
     npmDependencies in Test += "semver" -> "7.3.4",
     libraryDependencies ++= List(
       "org.scalameta" %%% "munit"            % "0.7.22" % "test",
-      "org.scalameta" %%% "munit-scalacheck" % "0.7.22" % "test"),
+      "org.scalameta" %%% "munit-scalacheck" % "0.7.22" % "test",
+      "io.github.cquiroz" %%% "scala-java-time" % "2.2.0" % "test"
+      ),
   )
   .jsPlatform(scalaVersions = List(dottyVersion, scala213Version),
     settings = (scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.CommonJSModule) }) :: batchModeOnCI)

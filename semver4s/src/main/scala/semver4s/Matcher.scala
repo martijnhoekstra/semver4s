@@ -28,6 +28,10 @@ sealed trait Matcher extends Product with Serializable {
 object Matcher {
   import Partial._
 
+  //If a version has a prerelease tag (for example, 1.2.3-alpha.3) then it will only be allowed to satisfy comparator
+  //sets if at least one comparator with the same [major, minor, patch] tuple also has a prerelease tag.
+  
+
   /** Simple matchers: all matcher except conjunction and disjunction (AND and OR) ranges
     */
   sealed trait Simple extends Matcher
@@ -37,15 +41,16 @@ object Matcher {
   case class Hyphen(lower: Partial, upper: Partial) extends Simple {
     def matches(version: Version): Boolean = matches(version, Strict)
     def matches(version: Version, pre: PreReleaseBehaviour): Boolean = {
+      def matchPre = pre == PreReleaseBehaviour.Loose || version.pre.isEmpty
       val lowerVersion = lower.version
       val matchesUpper = upper match {
         case Wild                => true
-        case Major(major)        => major >= version.major
-        case Minor(major, minor) => (major, minor) >= ((version.major, version.minor))
+        case Major(major)        => major >= version.major && matchPre
+        case Minor(major, minor) => (major, minor) >= ((version.major, version.minor)) && matchPre
         case Patch(major, minor, patch) =>
-          (major, minor, patch) >= ((version.major, version.minor, version.patch))
-        case Pre(major, minor, patch, _) =>
-          (major, minor, patch) > ((version.major, version.minor, version.patch))
+          (major, minor, patch) >= ((version.major, version.minor, version.patch)) && matchPre
+        case Pre(major, minor, patch, pre) =>
+          (major, minor, patch, Option(pre)) > ((version.major, version.minor, version.patch, version.pre))
       }
       (lowerVersion <= version) && matchesUpper
     }

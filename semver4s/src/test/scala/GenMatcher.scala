@@ -3,6 +3,8 @@ package semver4s
 import org.scalacheck.Gen
 
 object GenMatcher {
+  import GenVersion.nonNegativeLong
+  
   val genOp = Gen.oneOf(">", "=", "<", ">=", "<=")
   val genIdChar = Gen.oneOf(
     Gen.const('-'),
@@ -11,37 +13,33 @@ object GenMatcher {
     Gen.choose('a', 'z')
   )
 
-  val genId = Gen
-    .oneOf(
-      Gen.chooseNum(0L, Long.MaxValue).map(_.toString()),
-      Gen.stringOf(genIdChar).filterNot(_.isEmpty())
-    )
+  val genId = GenVersion.genPreId.map(_.fold(identity, _.toString()))
 
   val genPre = Gen.nonEmptyListOf(genId).map(_.mkString("-", ".", ""))
 
   val genPartial = {
     val wild = Gen.oneOf("", ".x", ".X", ".*")
     val genPatch = for {
-      patch <- Gen.chooseNum(0L, Long.MaxValue)
+      patch <- nonNegativeLong
       pre   <- Gen.oneOf(Gen.const(""), genPre)
     } yield "." + patch + pre
 
     val genMinor = for {
-      minor     <- Gen.chooseNum(0L, Long.MaxValue)
+      minor     <- nonNegativeLong
       patchPart <- Gen.oneOf(wild, genPatch)
     } yield "." + minor + patchPart
 
     for {
-      major     <- Gen.chooseNum(0L, Long.MaxValue)
+      major     <- nonNegativeLong
       minorPart <- Gen.oneOf(wild, genMinor)
     } yield major.toString() + minorPart
   }
 
   val genSemver =
     for {
-      major <- Gen.chooseNum(0L, Long.MaxValue)
-      minor <- Gen.chooseNum(0L, Long.MaxValue)
-      patch <- Gen.chooseNum(0L, Long.MaxValue)
+      major <- nonNegativeLong
+      minor <- nonNegativeLong
+      patch <- nonNegativeLong
       pre   <- Gen.oneOf(Gen.const(""), genPre)
     } yield s"$major.$minor.$patch$pre"
 
