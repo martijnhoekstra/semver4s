@@ -4,7 +4,7 @@ import org.scalacheck.Gen
 
 object GenMatcher {
   import GenVersion.nonNegativeLong
-  
+
   val genOp = Gen.oneOf(">", "=", "<", ">=", "<=")
   val genIdChar = Gen.oneOf(
     Gen.const('-'),

@@ -80,15 +80,23 @@ class MatcherTest extends munit.ScalaCheckSuite {
 
   test("comparator > prerelease") {
     val range       = m">1.2.3-alpha.3"
-    val matching    = List(v"1.2.3-alpha.7", v"1.2.3-rc1", v"1.2.3")
-    val notMatching = List(v"1.2.4", v"3.4.5-alpha.9", v"1.2.3-RC1")
+    val matching    = List(v"1.2.3-alpha.7", v"1.2.3-rc1", v"1.2.3", v"1.2.4")
+    val notMatching = List(v"3.4.5-alpha.9", v"1.2.3-RC1")
     for (v <- matching) assert(clue(range).matches(clue(v)))
     for (v <- notMatching) assert(!clue(range).matches(clue(v)))
   }
 
   test("comparator > prerelease loose") {
     val range = m">1.2.3-alpha.3"
-    val matching = List(v"1.2.3-alpha.7",v"1.2.3-rc1",v"1.2.3",v"3.4.5",v"3.4.5-alpha.9",v"1.2.4",v"1.2.3-alpha.3alpha")
+    val matching = List(
+      v"1.2.3-alpha.7",
+      v"1.2.3-rc1",
+      v"1.2.3",
+      v"3.4.5",
+      v"3.4.5-alpha.9",
+      v"1.2.4",
+      v"1.2.3-alpha.3alpha"
+    )
     val notMatching = List(v"1.2.3-alpha.2", v"1.2.3-RC1")
     for (v <- matching) assert(clue(range).matches(clue(v), clue(Loose)))
     for (v <- notMatching) assert(!clue(range).matches(clue(v), clue(Loose)))
@@ -111,7 +119,7 @@ class MatcherTest extends munit.ScalaCheckSuite {
   }
 
   test("spec example") {
-    val matcher   = m"1.x || >=2.5.0 || 5.0.0 - 7.2.3"
+    val matcher = m"1.x || >=2.5.0 || 5.0.0 - 7.2.3"
     val version = v"1.2.3"
     assert(matcher.matches(version))
   }

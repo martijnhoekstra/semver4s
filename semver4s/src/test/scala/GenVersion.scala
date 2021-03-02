@@ -8,37 +8,36 @@ object GenVersion {
 
   val smallishLong = {
     val unmaskBits = Gen.chooseNum(0, 64)
-    val masks = unmaskBits.map(-1L >>> _)
+    val masks      = unmaskBits.map(-1L >>> _)
     for {
       mask <- masks
-      num <- Gen.choose(Long.MinValue, 0L)
+      num  <- Gen.choose(Long.MinValue, 0L)
       flip <- Gen.oneOf(-1, 1)
     } yield flip * (mask & num)
   }
 
   val smallishInt = {
     val unmaskBits = Gen.chooseNum(0, 32)
-    val masks = unmaskBits.map(-1 >>> _)
+    val masks      = unmaskBits.map(-1 >>> _)
     for {
       mask <- masks
-      num <- Gen.choose(Int.MinValue, 0)
+      num  <- Gen.choose(Int.MinValue, 0)
       flip <- Gen.oneOf(-1, 1)
     } yield flip * (mask & num)
   }
 
   val smallishNNLong = smallishLong.map(math.abs)
-  val smallishNNInt = smallishInt.map(math.abs)
+  val smallishNNInt  = smallishInt.map(math.abs)
 
-  
   def numBetween(min: Long, max: Long, specials: Long*): Gen[Long] = {
     require(min <= max)
     if (min == max) Gen.const(min)
     else {
-      val mid = min + (max - min) / 2
+      val mid        = min + (max - min) / 2
       val deviations = Gen.oneOf(Gen.const(0L), smallishLong)
       val rough = for {
         base <- Gen.oneOf(min :: max :: mid :: specials.toList)
-        d <- deviations
+        d    <- deviations
       } yield base + d
       rough.retryUntil(r => r >= min && r <= max)
     }
@@ -48,11 +47,11 @@ object GenVersion {
     require(min <= max)
     if (min == max) Gen.const(min)
     else {
-      val mid = min + (max - min) / 2
+      val mid        = min + (max - min) / 2
       val deviations = Gen.oneOf(Gen.const(0), smallishInt)
       val rough = for {
         base <- Gen.oneOf(min :: max :: mid :: specials.toList)
-        d <- deviations
+        d    <- deviations
       } yield base + d
       rough.retryUntil(r => r >= min && r <= max)
     }
@@ -61,8 +60,11 @@ object GenVersion {
   val nonNegativeLong = numBetween(0L, Long.MaxValue)
 
   val genNumericId: Gen[SemVer.Identifier] = smallishNNLong.map(_.asRight[String])
-  val genAlphaId: Gen[SemVer.Identifier] = numBetween(1, 255).flatMap { length => 
-    Gen.stringOfN(length, GenMatcher.genIdChar).retryUntil(str => str.exists(ch => !ch.isDigit)).map(_.asLeft[Long])
+  val genAlphaId: Gen[SemVer.Identifier] = numBetween(1, 255).flatMap { length =>
+    Gen
+      .stringOfN(length, GenMatcher.genIdChar)
+      .retryUntil(str => str.exists(ch => !ch.isDigit))
+      .map(_.asLeft[Long])
   }
 
   val genPreId: Gen[SemVer.Identifier] = Gen.oneOf(genNumericId, genAlphaId)

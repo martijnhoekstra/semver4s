@@ -30,7 +30,6 @@ object Matcher {
 
   //If a version has a prerelease tag (for example, 1.2.3-alpha.3) then it will only be allowed to satisfy comparator
   //sets if at least one comparator with the same [major, minor, patch] tuple also has a prerelease tag.
-  
 
   /** Simple matchers: all matcher except conjunction and disjunction (AND and OR) ranges
     */
@@ -41,7 +40,7 @@ object Matcher {
   case class Hyphen(lower: Partial, upper: Partial) extends Simple {
     def matches(version: Version): Boolean = matches(version, Strict)
     def matches(version: Version, pre: PreReleaseBehaviour): Boolean = {
-      def matchPre = pre == PreReleaseBehaviour.Loose || version.pre.isEmpty
+      def matchPre     = pre == PreReleaseBehaviour.Loose || version.pre.isEmpty
       val lowerVersion = lower.version
       val matchesUpper = upper match {
         case Wild                => true
@@ -50,7 +49,14 @@ object Matcher {
         case Patch(major, minor, patch) =>
           (major, minor, patch) >= ((version.major, version.minor, version.patch)) && matchPre
         case Pre(major, minor, patch, pre) =>
-          (major, minor, patch, Option(pre)) > ((version.major, version.minor, version.patch, version.pre))
+          (major, minor, patch, Option(pre)) > (
+            (
+              version.major,
+              version.minor,
+              version.patch,
+              version.pre
+            )
+          )
       }
       (lowerVersion <= version) && matchesUpper
     }
@@ -143,24 +149,33 @@ object Matcher {
     }
   }
 
+  def preOK(p: Partial, preBehaviour: PreReleaseBehaviour, v: Version) = {
+    def onSamePatch = p match {
+      case Patch(v.major, v.minor, v.patch) | Pre(v.major, v.minor, v.patch, _) => true
+      case _                                                                    => false
+    }
+
+    v.pre.isEmpty ||
+    preBehaviour == PreReleaseBehaviour.Loose ||
+    (preBehaviour == PreReleaseBehaviour.Strict && onSamePatch)
+  }
+
   case class GT(p: Partial) extends Primitive {
     implicit val preReleaseOrder: Order[Option[SemVer.PreReleaseSuffix]] =
       VersionOrder.preReleaseOrder
 
     override def matches(that: Version) = matches(that, Strict)
-    override def matches(that: Version, preBehaviour: PreReleaseBehaviour) = p match {
-      case Wild         => that.pre.isEmpty || preBehaviour == Loose
-      case Major(major) => that.major > major && (preBehaviour == Loose || that.pre.isEmpty)
-      case Minor(major, minor) =>
-        (that.major > major || that.major == major && that.minor > minor) &&
-          (that.pre.isEmpty || preBehaviour == Loose)
-      case Patch(major, minor, patch) => (
-        (that.major > major ||
-          that.major == major && that.minor > minor ||
-          that.major == major && that.minor == minor && that.patch > patch) && (that.pre.isEmpty || preBehaviour == Loose)
-      )
-      case Pre(_, _, _, _) =>
-          that > p.version && (preBehaviour != Never || that.pre.isEmpty)
+    override def matches(that: Version, preBehaviour: PreReleaseBehaviour) = {
+      def versionOK = p match {
+        case Wild                => true
+        case Major(major)        => that.major > major
+        case Minor(major, minor) => that.major > major || that.major == major && that.minor > minor
+        case Patch(major, minor, patch) =>
+          that.major > major || that.major == major && that.minor > minor || that.major == major && that.minor == minor && that.patch > patch
+        case Pre(_, _, _, _) => that > p.version
+      }
+
+      preOK(p, preBehaviour, that) && versionOK
     }
   }
 
@@ -168,19 +183,17 @@ object Matcher {
     implicit val preReleaseOrder: Order[Option[SemVer.PreReleaseSuffix]] =
       VersionOrder.preReleaseOrder
     override def matches(that: Version) = matches(that, Strict)
-    override def matches(that: Version, preBehaviour: PreReleaseBehaviour) = p match {
-      case Wild         => that.pre.isEmpty || preBehaviour == Loose
-      case Major(major) => that.major >= major && (preBehaviour == Loose || that.pre.isEmpty)
-      case Minor(major, minor) =>
-        (that.major > major || that.major == major && that.minor >= minor) &&
-          (that.pre.isEmpty || preBehaviour == Loose)
-      case Patch(major, minor, patch) => (
-        (that.major > major ||
-          that.major == major && that.minor > minor ||
-          that.major == major && that.minor == minor && that.patch >= patch) && (that.pre.isEmpty || preBehaviour == Loose)
-      )
-      case Pre(_, _, _, _) =>
-        that >= p.version && (preBehaviour != Never || that.pre.isEmpty)
+    override def matches(that: Version, preBehaviour: PreReleaseBehaviour) = {
+      def versionOK = p match {
+        case Wild                => true
+        case Major(major)        => that.major >= major
+        case Minor(major, minor) => that.major > major || that.major == major && that.minor >= minor
+        case Patch(major, minor, patch) =>
+          that.major > major || that.major == major && that.minor > minor || that.major == major && that.minor == minor && that.patch >= patch
+        case Pre(_, _, _, _) => that >= p.version
+      }
+
+      preOK(p, preBehaviour, that) && versionOK
     }
   }
 
@@ -211,29 +224,18 @@ object Matcher {
   case class LTE(p: Partial) extends Primitive {
     override def matches(that: Version) = matches(that, Strict)
     override def matches(that: Version, preBehaviour: PreReleaseBehaviour): Boolean = {
-      def allowStrictPatch = p match {
-        case Patch(that.major, that.minor, that.patch) |
-             Pre(that.major, that.minor, that.patch, _) => true
-        case _ => false
-      }
-      val preOK = that.pre.isEmpty || preBehaviour == PreReleaseBehaviour.Loose || (preBehaviour == PreReleaseBehaviour.Strict && allowStrictPatch)
-
       val versionOK = p match {
-        case Wild             => true
-        case Major(major) => that.major <= major
-        case Minor(major, minor) =>
-          that.major < major ||
-            that.major == major && that.minor <= minor
-        case Patch(major, minor, patch) => (
+        case Wild                => true
+        case Major(major)        => that.major <= major
+        case Minor(major, minor) => that.major < major || that.major == major && that.minor <= minor
+        case Patch(major, minor, patch) =>
           that.major < major ||
             that.major == major && that.minor < minor ||
             that.major == major && that.minor == minor && that.patch <= patch
-        )
-        case Pre(major, minor, patch, pre) => preBehaviour != PreReleaseBehaviour.Never &&
-          that.major == major && that.minor == minor && that.patch == patch && that.pre <= Some(pre)
+        case Pre(_, _, _, _) => that <= p.version
       }
 
-      preOK && versionOK
+      preOK(p, preBehaviour, that) && versionOK
     }
   }
 
@@ -366,16 +368,16 @@ object Matcher {
   private def minLower(b1: Bound, b2: Bound): Bound = if (maxLower(b1, b2) == b1) b2 else b1
 
   def print(m: Matcher): String = m match {
-    case And(simples) => simples.toList.map(print).mkString(" ")
-    case Or(ands) => ands.toList.map(print).mkString(" || ")
-    case Caret(p) => s"^$p"
-    case Tilde(p) => s"~$p"
+    case And(simples)         => simples.toList.map(print).mkString(" ")
+    case Or(ands)             => ands.toList.map(print).mkString(" || ")
+    case Caret(p)             => s"^$p"
+    case Tilde(p)             => s"~$p"
     case Hyphen(lower, upper) => s"$lower - $upper"
-    case Exact(p) => p.toString()
-    case GT(p) => s">$p"
-    case GTE(p) => s">=$p"
-    case LT(p) => s"<$p"
-    case LTE(p) => s"<=$p"
+    case Exact(p)             => p.toString()
+    case GT(p)                => s">$p"
+    case GTE(p)               => s">=$p"
+    case LT(p)                => s"<$p"
+    case LTE(p)               => s"<=$p"
   }
 
 }
