@@ -159,25 +159,8 @@ object Matcher {
           that.major == major && that.minor > minor ||
           that.major == major && that.minor == minor && that.patch > patch) && (that.pre.isEmpty || preBehaviour == Loose)
       )
-      case Pre(major, minor, pat, pre) =>
-        preBehaviour match { // >1.2.3-alpha.1
-          case Never => false
-          case Strict => //matches 1.2.3-alpha.2 and 1.2.3
-            that.major == major && that.minor == minor && that.patch == pat && that.pre > Option(
-              pre
-            )
-          case Loose =>
-            //matches 2.whatever
-            that.major > major ||
-              //matches 1.3.whatever
-              that.major == major && that.minor > minor ||
-              //matches 1.2.4(-whatever)
-              that.major == major && that.minor == minor && that.patch > pat ||
-              //matches 1.2.3 and 1.2.3-alpha.2
-              that.major == major && that.minor == minor && that.patch == pat && that.pre > Option(
-                pre
-              )
-        }
+      case Pre(_, _, _, _) =>
+          that > p.version && (preBehaviour != Never || that.pre.isEmpty)
     }
   }
 
@@ -196,16 +179,8 @@ object Matcher {
           that.major == major && that.minor > minor ||
           that.major == major && that.minor == minor && that.patch >= patch) && (that.pre.isEmpty || preBehaviour == Loose)
       )
-      case Pre(major, minor, pat, pre) =>
-        preBehaviour match { // >1.2.3-alpha.1
-          case Never => false
-          case Strict => //matches 1.2.3-alpha.2 and 1.2.3
-            that.major == major &&
-              that.minor == minor &&
-              that.patch == pat &&
-              that.pre >= Option(pre)
-          case Loose => that >= p.version
-        }
+      case Pre(_, _, _, _) =>
+        that >= p.version && (preBehaviour != Never || that.pre.isEmpty)
     }
   }
 
@@ -235,34 +210,30 @@ object Matcher {
 
   case class LTE(p: Partial) extends Primitive {
     override def matches(that: Version) = matches(that, Strict)
-    override def matches(that: Version, pre: PreReleaseBehaviour): Boolean = {
-      (p, pre) match {
-        case (Wild, _)             => true
-        case (Major(major), Loose) => that.major <= major
-        case (Major(major), _)     => that.major <= major && that.pre.isEmpty
-        case (Minor(major, minor), Loose) =>
+    override def matches(that: Version, preBehaviour: PreReleaseBehaviour): Boolean = {
+      def allowStrictPatch = p match {
+        case Patch(that.major, that.minor, that.patch) |
+             Pre(that.major, that.minor, that.patch, _) => true
+        case _ => false
+      }
+      val preOK = that.pre.isEmpty || preBehaviour == PreReleaseBehaviour.Loose || (preBehaviour == PreReleaseBehaviour.Strict && allowStrictPatch)
+
+      val versionOK = p match {
+        case Wild             => true
+        case Major(major) => that.major <= major
+        case Minor(major, minor) =>
           that.major < major ||
             that.major == major && that.minor <= minor
-        case (Minor(major, minor), _) =>
-          (
-            that.major < major ||
-              that.major == major && that.minor <= minor
-          ) && that.pre.isEmpty
-        case (Patch(major, minor, patch), Loose) => (
+        case Patch(major, minor, patch) => (
           that.major < major ||
             that.major == major && that.minor < minor ||
             that.major == major && that.minor == minor && that.patch <= patch
         )
-        case (Patch(major, minor, patch), _) => (
-          that.major < major ||
-            that.major == major && that.minor < minor ||
-            that.major == major && that.minor == minor && that.patch < patch && that.pre.isEmpty ||
-            that.major == major && that.minor == minor && that.patch == patch && (that.pre.isEmpty || pre == Strict)
-        )
-        case (Pre(_, _, _, _), Never) => false
-        case (Pre(major, minor, patch, pre), _) =>
+        case Pre(major, minor, patch, pre) => preBehaviour != PreReleaseBehaviour.Never &&
           that.major == major && that.minor == minor && that.patch == patch && that.pre <= Some(pre)
       }
+
+      preOK && versionOK
     }
   }
 

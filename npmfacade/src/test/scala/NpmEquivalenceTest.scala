@@ -1,6 +1,7 @@
 package semver4s
 
 import org.scalacheck.Prop.forAll
+import org.scalacheck.Shrink
 
 class NpmEquivalenceTest extends munit.ScalaCheckSuite {
   import semver4s.npm.NPMSemver
@@ -21,7 +22,10 @@ class NpmEquivalenceTest extends munit.ScalaCheckSuite {
   }
 
   val jsSafeVersion = genVersion.retryUntil(isJsSafeVersion)
+  val jsSafePrimitive = genPrimitive.retryUntil(s => s.length <= 256 && matcher(s).exists(isJsSafeMatcher))
+  val jsSafeTilde = genTildeRange.retryUntil(s => s.length <= 256 && matcher(s).exists(isJsSafeMatcher))
   val jsSafeMatcher = genRangeSet.retryUntil(s => s.length <= 256 && matcher(s).exists(isJsSafeMatcher))
+
 
   test("NPM semver satisfies works") {
     assert(NPMSemver.satisfies("1.2.3", "1.x"))
@@ -68,6 +72,24 @@ class NpmEquivalenceTest extends munit.ScalaCheckSuite {
   test("NPM long numeric suffixes are accepted and compared numerically") {
     assert(NPMSemver.gt(clue("1.0.0-109007199254740991"), clue("1.0.0-99007199254740991")))
     assert(NPMSemver.lt(clue("1.0.0-99007199254740991"), clue("1.0.0-109007199254740991")))
+  }
+
+  def assertMatchEquiv(version: String, matcher: String) = {
+    val Right(v) = semver4s.version(version)
+    val Right(m) = semver4s.matcher(matcher)
+
+    val matches4s = m.matches(v)
+    val matchesNPM = NPMSemver.satisfies(version, matcher)
+    val explain = if (matches4s) "semver4s matches, but npm doesn't"
+                  else "npm matches, but semver4s doesn't"
+    assertEquals(matches4s, matchesNPM, clue((version, matcher, explain)))
+  }
+
+  property("Semver4s and NPM are consistent in what versions satisfy a primitive range") {
+    implicit def noShrink[A]: Shrink[A] = Shrink.shrinkAny
+    forAll(jsSafePrimitive, jsSafeVersion)((rs, v) => {
+      assertMatchEquiv(v.format, rs)
+    })
   }
 
   /*
