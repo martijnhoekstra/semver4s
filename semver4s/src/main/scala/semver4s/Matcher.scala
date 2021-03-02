@@ -40,25 +40,11 @@ object Matcher {
   case class Hyphen(lower: Partial, upper: Partial) extends Simple {
     def matches(version: Version): Boolean = matches(version, Strict)
     def matches(version: Version, pre: PreReleaseBehaviour): Boolean = {
-      def matchPre     = pre == PreReleaseBehaviour.Loose || version.pre.isEmpty
-      val lowerVersion = lower.version
-      val matchesUpper = upper match {
-        case Wild                => true
-        case Major(major)        => major >= version.major && matchPre
-        case Minor(major, minor) => (major, minor) >= ((version.major, version.minor)) && matchPre
-        case Patch(major, minor, patch) =>
-          (major, minor, patch) >= ((version.major, version.minor, version.patch)) && matchPre
-        case Pre(major, minor, patch, pre) =>
-          (major, minor, patch, Option(pre)) > (
-            (
-              version.major,
-              version.minor,
-              version.patch,
-              version.pre
-            )
-          )
+      val upperMatcher = upper match {
+        case Patch(_, _, _) | Pre(_, _, _, _) => LTE(upper)
+        case _                                => LT(upper)
       }
-      (lowerVersion <= version) && matchesUpper
+      lower.version <= version && upperMatcher.matches(version, pre)
     }
   }
 
