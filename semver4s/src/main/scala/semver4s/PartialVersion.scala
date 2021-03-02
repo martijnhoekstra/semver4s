@@ -34,9 +34,9 @@ object Partial {
   }
 
   def print(p: Partial): String = p match {
-    case Wild => "*"
-    case Major(major) => s"$major.*"
-    case Minor(major, minor) => s"$major.$minor.*"
+    case Wild                       => "*"
+    case Major(major)               => s"$major.*"
+    case Minor(major, minor)        => s"$major.$minor.*"
     case Patch(major, minor, patch) => s"$major.$minor.$patch"
     case Pre(major, minor, patch, pre) => {
       val preString = pre.toList.map(_.fold(identity, _.toString)).mkString(".")

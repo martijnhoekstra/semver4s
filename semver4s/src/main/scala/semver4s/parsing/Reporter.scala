@@ -26,14 +26,15 @@ class Reporter(source: String) {
       (lineNumber, col) <- map.toLineCol(offset)
       line              <- map.getLine(lineNumber)
     } yield {
-      val startIndex = if (line.length <= maxWidth) 0
-      else {
-        val leadingTarget = (0.8 * maxWidth).toInt
-        val leading = math.min(col, leadingTarget)
-        col - leading
-      }
+      val startIndex =
+        if (line.length <= maxWidth) 0
+        else {
+          val leadingTarget = (0.8 * maxWidth).toInt
+          val leading       = math.min(col, leadingTarget)
+          col - leading
+        }
       val lineSegment = line.drop(startIndex).take(maxWidth)
-      val p = " " * (col - startIndex) + "^"
+      val p           = " " * (col - startIndex) + "^"
       List(lineSegment, p)
     }).getOrElse(Nil)
 
@@ -67,7 +68,8 @@ class Reporter(source: String) {
       case OneOfStr(_, options) =>
         s"one of the following: " + options.map(str => s""""$str"""").mkString(", ")
       case InRange(_, lower, upper) if (lower == upper) => s"character ${charInfo(lower)}"
-      case InRange(_, lower, upper) if (lower + 1 == upper) => s"character ${charInfo(lower)} or ${charInfo(upper)}}"
+      case InRange(_, lower, upper) if (lower + 1 == upper) =>
+        s"character ${charInfo(lower)} or ${charInfo(upper)}}"
       case InRange(_, lower, upper) =>
         s"a character between ${charInfo(lower)} and ${charInfo(upper)}"
       case StartOfString(_)            => "the start of input"
