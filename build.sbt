@@ -6,6 +6,7 @@ import xerial.sbt.Sonatype._
 
 ThisBuild / testFrameworks += new TestFramework("munit.Framework")
 ThisBuild / scalaVersion := scala213Version
+ThisBuild / versionScheme := Some("early-semver")
 ThisBuild / organization := "com.heroestools"
 ThisBuild / licenses := Seq("LGPLv3" -> url("https://www.gnu.org/licenses/lgpl-3.0.en.html"))
 ThisBuild / developers := List(
