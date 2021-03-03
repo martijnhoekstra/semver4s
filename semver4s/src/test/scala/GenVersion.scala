@@ -75,7 +75,7 @@ object GenVersion {
     major <- nonNegativeLong
     minor <- nonNegativeLong
     patch <- nonNegativeLong if (major, minor, patch) != ((0L, 0L, 0L))
-  } yield CoreVersion(major, minor, patch)
+  } yield CoreVersion.unsafe(major, minor, patch)
 
   val genVersion: Gen[Version] = for {
     core @ CoreVersion(major, minor, patch) <- genCoreVersion

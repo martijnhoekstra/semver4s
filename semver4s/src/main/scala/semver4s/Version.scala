@@ -37,20 +37,6 @@ object Version {
     Order.by((v: Version) => (v.major, v.minor, v.patch, v.pre))
   }
 
-  /** Increments the version number
-    *
-    * such that the returned number for version `v` is the lowest version that would match `>v`
-    */
-  def inc(v: Version): Version = v match {
-    case Version(maj, min, pat, Some(pre), _) => Version.unsafe(maj, min, pat, inc(pre))
-    case Version(maj, min, pat, None, _)      => Version.unsafe(maj, min, pat + 1)
-  }
-
-  private[this] def inc(suffix: SemVer.PreReleaseSuffix): SemVer.PreReleaseSuffix =
-    suffix.reverse match {
-      case NonEmptyList(Right(l), tail) => NonEmptyList(Right(l + 1), tail).reverse
-      case NonEmptyList(Left(s), tail)  => NonEmptyList(Left(s + "-"), tail).reverse
-    }
 }
 
 /** A semver version specification
@@ -67,6 +53,18 @@ sealed abstract case class Version(
 ) {
   def coreVersion    = new CoreVersion(major, minor, patch) {}
   def incrementMajor = Version.unsafe(major + 1, 0, 0)
+  def incrementMinor = Version.unsafe(major, minor + 1, 0)
+  def incrementPatch = Version.unsafe(major, minor, patch + 1)
+  def increment = {
+      def inc(suffix: SemVer.PreReleaseSuffix): SemVer.PreReleaseSuffix = suffix.reverse match {
+      case NonEmptyList(Right(l), tail) => NonEmptyList(Right(l + 1), tail).reverse
+      case NonEmptyList(Left(s), tail)  => NonEmptyList(Left(s + "-"), tail).reverse
+    }
+    pre match {
+    case None => incrementPatch
+    case Some(prefix) => Version.unsafe(major, minor, patch, inc(prefix))
+  }
+}
 
   /** The version, formatted in SemVer format
     */
