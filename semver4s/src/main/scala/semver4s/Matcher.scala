@@ -132,7 +132,7 @@ object Matcher {
     }
   }
 
-  def preOK(p: Partial, preBehaviour: PreReleaseBehaviour, v: Version) = {
+  private def preOK(p: Partial, preBehaviour: PreReleaseBehaviour, v: Version) = {
     def onSamePatch = p match {
       case Patch(v.major, v.minor, v.patch) | Pre(v.major, v.minor, v.patch, _) => true
       case _                                                                    => false
@@ -140,7 +140,7 @@ object Matcher {
 
     v.pre.isEmpty ||
     preBehaviour == PreReleaseBehaviour.Loose ||
-    (preBehaviour == PreReleaseBehaviour.Strict && onSamePatch)
+    preBehaviour == PreReleaseBehaviour.Strict && onSamePatch
   }
 
   case class GT(p: Partial) extends Primitive {
@@ -274,6 +274,7 @@ object Matcher {
     case Or(ands)         => ands.map(lowerBound).reduceLeft(minLower)
     case Exact(p)         => Inclusive(p.version)
     case GT(p: Pre)       => Exclusive(p.version)
+    case GT(Wild)         => Exclusive(Version.unsafe(0, 0, 0))
     case GT(p)            => Inclusive(p.increment.version)
     case GTE(p)           => Inclusive(p.version)
     case LT(_)            => Inclusive(Version.unsafe(0, 0, 0))

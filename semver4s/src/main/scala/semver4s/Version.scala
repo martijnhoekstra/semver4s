@@ -61,10 +61,10 @@ sealed abstract case class Version(
       case NonEmptyList(Left(s), tail)  => NonEmptyList(Left(s + "-"), tail).reverse
     }
     pre match {
-    case None => incrementPatch
-    case Some(prefix) => Version.unsafe(major, minor, patch, inc(prefix))
+      case None         => incrementPatch
+      case Some(prefix) => Version.unsafe(major, minor, patch, inc(prefix))
+    }
   }
-}
 
   /** The version, formatted in SemVer format
     */
