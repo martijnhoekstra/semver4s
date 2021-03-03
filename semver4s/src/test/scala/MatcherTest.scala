@@ -126,10 +126,18 @@ class MatcherTest extends munit.ScalaCheckSuite {
     for (v <- notMatching) assert(!clue(range).matches(clue(v), clue(Loose)))
   }
 
-  test("caret examples") {
+  test("caret full") {
     val range       = m"^2.12.13"
     val matching    = List(v"2.12.13", v"2.12.20", v"2.13.0", v"2.13.1", v"2.14.0")
     val notMatching = List(v"3.0.0", v"3.0.0-RC1", v"3.1.0")
+    for (v <- matching) assert(clue(range).matches(clue(v)))
+    for (v <- notMatching) assert(!clue(range).matches(clue(v)))
+  }
+
+  test("caret wild patch") {
+    val range       = m"^1.2.*"
+    val matching    = List(v"1.2.0", v"1.2.1", v"1.3.0", v"1.14323701.0")
+    val notMatching = List(v"2.0.0", v"2.0.1", v"1.1.1")
     for (v <- matching) assert(clue(range).matches(clue(v)))
     for (v <- notMatching) assert(!clue(range).matches(clue(v)))
   }
@@ -143,7 +151,7 @@ class MatcherTest extends munit.ScalaCheckSuite {
       m"^1.2.x"      -> m">=1.2.0 <2.0.0",
       m"^0.0.x"      -> m">=0.0.0 <0.1.0",
       m"^0.0"        -> m">=0.0.0 <0.1.0",
-      m"^1.x"        -> m"1.0.0 <2.0.0",
+      m"^1.x"        -> m">=1.0.0 <2.0.0",
       m"^0.x"        -> m">=0.0.0 <1.0.0"
     )
     equivalences

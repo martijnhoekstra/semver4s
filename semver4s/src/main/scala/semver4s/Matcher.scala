@@ -55,10 +55,10 @@ object Matcher {
     def matches(that: Version, preBehaviour: PreReleaseBehaviour): Boolean = {
       val lower = Matcher.gte(p)
       p match {
-        case Wild     => true //^* kinda weird, but whatever
-        case Major(m) => (lower && LT(Major(m + 1))).matches(that, preBehaviour)
-        case Minor(major, minor) =>
-          (lower && LT(Minor(major, minor + 1))).matches(that, preBehaviour)
+        case Wild               => true //^* kinda weird, but whatever
+        case Major(m)           => (lower && LT(Major(m + 1))).matches(that, preBehaviour)
+        case Minor(0, m)        => (lower && lt(Minor(0, m + 1))).matches(that, preBehaviour)
+        case Minor(m, _)        => (lower && LT(Major(m + 1))).matches(that, preBehaviour)
         case Patch(0, 0, _)     => Matcher.eqv(p).matches(that, preBehaviour)
         case Patch(0, minor, _) => (lower && LT(Minor(0, minor + 1))).matches(that, preBehaviour)
         case Patch(major, _, _) => (lower && LT(Major(major + 1))).matches(that, preBehaviour)
