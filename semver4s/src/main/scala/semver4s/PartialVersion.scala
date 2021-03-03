@@ -42,22 +42,22 @@ object Partial {
     def version   = Version(major, 0, 0)
   }
   sealed abstract case class Minor(major: Long, minor: Long) extends Partial {
-    def incrementMajor = unsafe(major + 1, 0)
+    def incrementMajor = unsafe(major + 1)
     def increment = unsafe(major, minor + 1)
     def version   = Version(major, minor, 0)
   }
 
   sealed abstract case class Patch(major: Long, minor: Long, patch: Long) extends Partial {
-    def incrementMajor = unsafe(major + 1, 0, 0)
-    def incrementMinor = unsafe(major, minor + 1, 0)
+    def incrementMajor = unsafe(major + 1)
+    def incrementMinor = unsafe(major, minor + 1)
     def increment = unsafe(major, minor, patch + 1)
     def version   = Version(major, minor, patch)
   }
 
   sealed abstract case class Pre(major: Long, minor: Long, patch: Long, pre: SemVer.PreReleaseSuffix)
       extends Partial {
-    def incrementMajor = unsafe(major + 1, 0, 0)
-    def incrementMinor = unsafe(major, minor + 1, 0)
+    def incrementMajor = unsafe(major + 1)
+    def incrementMinor = unsafe(major, minor + 1)
     def incrementPatch = unsafe(major, minor, patch + 1)
     def increment = pre.last match {
       case Left(str) => unsafe(major, minor, patch, NonEmptyList.fromListUnsafe(pre.init :+ Left(str + "-")))
