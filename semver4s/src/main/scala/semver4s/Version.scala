@@ -13,14 +13,22 @@ object Version {
 
   /** Construct a core version from major.minor.patch
     */
-  def unsafe(major: Long, minor: Long, patch: Long) = new Version(major, minor, patch, None, None){}
-  def unsafe(major: Long, minor: Long, patch: Long, pre: SemVer.PreReleaseSuffix) = new Version(major, minor, patch, Some(pre), None){}
-  def unsafe(major: Long, minor: Long, patch: Long, pre: Option[SemVer.PreReleaseSuffix], bld: Option[String]) = new Version(major, minor, patch, pre, bld){}
+  def unsafe(major: Long, minor: Long, patch: Long) =
+    new Version(major, minor, patch, None, None) {}
+  def unsafe(major: Long, minor: Long, patch: Long, pre: SemVer.PreReleaseSuffix) =
+    new Version(major, minor, patch, Some(pre), None) {}
+  def unsafe(
+      major: Long,
+      minor: Long,
+      patch: Long,
+      pre: Option[SemVer.PreReleaseSuffix],
+      bld: Option[String]
+  ) = new Version(major, minor, patch, pre, bld) {}
 
   /** Construct a core version from major.minor.patch if all are Int
     */
   def unsafe(major: Int, minor: Int, patch: Int) =
-    new Version(major.toLong, minor.toLong, patch.toLong, None, None){}
+    new Version(major.toLong, minor.toLong, patch.toLong, None, None) {}
 
   /** Version order, where each higher version sorts after a lower version
     */
@@ -57,8 +65,9 @@ sealed abstract case class Version(
     pre: Option[SemVer.PreReleaseSuffix],
     build: Option[String]
 ) {
-  def coreVersion = new CoreVersion(major, minor, patch){}
+  def coreVersion    = new CoreVersion(major, minor, patch) {}
   def incrementMajor = Version.unsafe(major + 1, 0, 0)
+
   /** The version, formatted in SemVer format
     */
   def format: String = {
@@ -74,6 +83,8 @@ sealed abstract case class CoreVersion(major: Long, minor: Long, patch: Long) {
 }
 
 object CoreVersion {
-  def apply(major: Long, minor: Long, patch: Long) = if(major >= 0 && minor >= 0 && patch >= 0) Some(new CoreVersion(major, minor, patch){}) else None
-  def unsafe(major: Long, minor: Long, patch: Long) = new CoreVersion(major, minor, patch){}
+  def apply(major: Long, minor: Long, patch: Long) = if (major >= 0 && minor >= 0 && patch >= 0)
+    Some(new CoreVersion(major, minor, patch) {})
+  else None
+  def unsafe(major: Long, minor: Long, patch: Long) = new CoreVersion(major, minor, patch) {}
 }

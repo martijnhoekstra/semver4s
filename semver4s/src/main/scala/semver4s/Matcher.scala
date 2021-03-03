@@ -290,30 +290,27 @@ object Matcher {
         case p: Patch => Inclusive(p.version)
         case p: Pre   => Inclusive(p.version)
       }
-    case Caret(p) =>
-      p match {
-        case Wild                => Unbounded //^* kinda weird, but whatever
-        case Major(m)            => Exclusive(Partial.unsafe(m + 1).version)
-        case Minor(major, minor) => Exclusive(Partial.unsafe(major, minor + 1).version)
-        case Patch(0, 0, _)      => Inclusive(p.version)
-        case Patch(0, minor, _)  => Exclusive(Partial.unsafe(0, minor + 1).version)
-        case Patch(major, _, _)  => Exclusive(Partial.unsafe(major).version)
+    case Caret(part) =>
+      part match {
+        case Wild               => Unbounded //^* kinda weird, but whatever
+        case m @ Major(_)       => Exclusive(m.increment.version)
+        case m @ Minor(_, _)    => Exclusive(m.increment.version)
+        case p @ Patch(0, 0, _) => Inclusive(p.version)
+        case p @ Patch(0, _, _) => Exclusive(p.incrementMinor.version)
+        case p @ Patch(_, _, _) => Exclusive(p.incrementMajor.version)
         //^0.0.3-beta := >=0.0.3-beta <0.0.4 Note that prereleases in the 0.0.3 version only will be allowed, if they are greater than or equal to beta
         case pre @ Pre(0, 0, _, _) => Exclusive(pre.incrementPatch.version)
         //^1.2.3-beta.2 := >=1.2.3-beta.2 <2.0.0 //1.2.3-beta.4 would be allowed, but 1.2.4-beta.2 would not
-        case Pre(0, min, _, _) => Exclusive(Partial.unsafe(0, min + 1).version)
-        case Pre(maj, _, _, _) => Exclusive(Partial.unsafe(maj + 1).version)
+        case pre @ Pre(0, _, _, _) => Exclusive(pre.incrementMinor.version)
+        case pre @ Pre(_, _, _, _) => Exclusive(pre.incrementMajor.version)
       }
-    case Tilde(p) =>
-      p match {
-        case Wild         => Unbounded                                    //~* kinda weird, but whatever
-        case Major(major) => Exclusive(Partial.unsafe(major + 1).version) //same as caret
-        case Minor(major, minor) =>
-          Exclusive(Partial.unsafe(major, minor + 1).version) //in the glorious future
-        case Patch(major, minor, _) =>
-          Exclusive(Partial.unsafe(major, minor + 1).version) //binders should be
-        case Pre(major, minor, _, _) =>
-          Exclusive(Partial.unsafe(major, minor + 1).version) //allowed in alternative
+    case Tilde(part) =>
+      part match {
+        case Wild                => Unbounded                           //~* kinda weird, but whatever
+        case m @ Major(_)        => Exclusive(m.increment.version)      //same as caret
+        case m @ Minor(_, _)     => Exclusive(m.increment.version)      //in the glorious future
+        case p @ Patch(_, _, _)  => Exclusive(p.incrementMinor.version) //binders should be
+        case p @ Pre(_, _, _, _) => Exclusive(p.incrementMinor.version) //allowed in alternative
       }
     case Exact(p) => Exclusive(p.increment.version)
     case GT(_)    => Unbounded

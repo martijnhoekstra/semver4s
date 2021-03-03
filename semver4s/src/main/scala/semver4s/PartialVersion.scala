@@ -11,11 +11,11 @@ sealed trait Partial {
 object Partial {
   import PartialFunction.condOpt
 
-  def unsafe(major: Long)                           = new Major(major){}
-  def unsafe(major: Long, minor: Long)              = new Minor(major, minor){}
-  def unsafe(major: Long, minor: Long, patch: Long) = new Patch(major, minor, patch){}
+  def unsafe(major: Long)                           = new Major(major) {}
+  def unsafe(major: Long, minor: Long)              = new Minor(major, minor) {}
+  def unsafe(major: Long, minor: Long, patch: Long) = new Patch(major, minor, patch) {}
   def unsafe(major: Long, minor: Long, patch: Long, pre: SemVer.PreReleaseSuffix) =
-    new Pre(major, minor, patch, pre){}
+    new Pre(major, minor, patch, pre) {}
 
   def apply(major: Long) = condOpt(major) {
     case m if m >= 0 => new Major(major) {}
@@ -43,27 +43,33 @@ object Partial {
   }
   sealed abstract case class Minor(major: Long, minor: Long) extends Partial {
     def incrementMajor = unsafe(major + 1)
-    def increment = unsafe(major, minor + 1)
-    def version   = Version.unsafe(major, minor, 0)
+    def increment      = unsafe(major, minor + 1)
+    def version        = Version.unsafe(major, minor, 0)
   }
 
   sealed abstract case class Patch(major: Long, minor: Long, patch: Long) extends Partial {
     def incrementMajor = unsafe(major + 1)
     def incrementMinor = unsafe(major, minor + 1)
-    def increment = unsafe(major, minor, patch + 1)
-    def version   = Version.unsafe(major, minor, patch)
+    def increment      = unsafe(major, minor, patch + 1)
+    def version        = Version.unsafe(major, minor, patch)
   }
 
-  sealed abstract case class Pre(major: Long, minor: Long, patch: Long, pre: SemVer.PreReleaseSuffix)
-      extends Partial {
+  sealed abstract case class Pre(
+      major: Long,
+      minor: Long,
+      patch: Long,
+      pre: SemVer.PreReleaseSuffix
+  ) extends Partial {
     def incrementMajor = unsafe(major + 1)
     def incrementMinor = unsafe(major, minor + 1)
     def incrementPatch = unsafe(major, minor, patch + 1)
     def increment = pre.last match {
-      case Left(str) => unsafe(major, minor, patch, NonEmptyList.fromListUnsafe(pre.init :+ Left(str + "-")))
-      case Right(l) => unsafe(major, minor, patch, NonEmptyList.fromListUnsafe(pre.init :+ Right(l + 1)))
+      case Left(str) =>
+        unsafe(major, minor, patch, NonEmptyList.fromListUnsafe(pre.init :+ Left(str + "-")))
+      case Right(l) =>
+        unsafe(major, minor, patch, NonEmptyList.fromListUnsafe(pre.init :+ Right(l + 1)))
     }
-    def version   = Version.unsafe(major, minor, patch, pre)
+    def version = Version.unsafe(major, minor, patch, pre)
   }
 
   def print(p: Partial): String = p match {
