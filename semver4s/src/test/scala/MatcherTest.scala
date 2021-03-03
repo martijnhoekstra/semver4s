@@ -6,6 +6,30 @@ import Literal._
 
 class MatcherTest extends munit.ScalaCheckSuite {
 
+  def areEquivalent(m1: Matcher, m2: Matcher) = forAll(GenVersion.genVersion) { v =>
+    //test both "default" and all explicit pre-release behaviours
+
+    assertEquals(
+      m1.matches(v),
+      m2.matches(v),
+      clue((Matcher.print(m1), Matcher.print(m2), v.format))
+    )
+
+    for (
+      behaviour <- List(
+        PreReleaseBehaviour.Loose,
+        PreReleaseBehaviour.Strict,
+        PreReleaseBehaviour.Never
+      )
+    ) {
+      assertEquals(
+        m1.matches(v, behaviour),
+        m2.matches(v, behaviour),
+        clue((Matcher.print(m1), Matcher.print(m2), v.format, behaviour))
+      )
+    }
+  }
+
   test("comparator examples 1") {
     val range       = m">=1.2.7"
     val matching    = List(v"1.2.7", v"1.2.8", v"2.5.3", v"1.3.9")
@@ -110,12 +134,17 @@ class MatcherTest extends munit.ScalaCheckSuite {
     for (v <- notMatching) assert(!clue(range).matches(clue(v)))
   }
 
+  property("caret equivalents from npm documentation") {
+    areEquivalent(m"^1.2.3", m">=1.2.3 <2.0.0") &&
+    areEquivalent(m"^0.2.3", m">=0.2.3 <0.3.0") &&
+    areEquivalent(m"^0.0.3", m">=0.0.3 <0.0.4") &&
+    areEquivalent(m"^0.0.3-beta", m">=0.0.3-beta <0.0.4")
+  }
+
   property("caret equivalent to range") {
     val tilde = m"^2.12.13"
     val range = m"2.12.13 - 3"
-    forAll(GenVersion.genVersion) { v =>
-      assertEquals(clue(tilde).matches(v), clue(range).matches(clue(v)))
-    }
+    areEquivalent(tilde, range)
   }
 
   test("hyphen range examples right partial") {
