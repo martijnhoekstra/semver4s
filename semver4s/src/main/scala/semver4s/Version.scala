@@ -56,7 +56,7 @@ sealed abstract case class Version(
   def incrementMinor = Version.unsafe(major, minor + 1, 0)
   def incrementPatch = Version.unsafe(major, minor, patch + 1)
   def increment = {
-      def inc(suffix: SemVer.PreReleaseSuffix): SemVer.PreReleaseSuffix = suffix.reverse match {
+    def inc(suffix: SemVer.PreReleaseSuffix): SemVer.PreReleaseSuffix = suffix.reverse match {
       case NonEmptyList(Right(l), tail) => NonEmptyList(Right(l + 1), tail).reverse
       case NonEmptyList(Left(s), tail)  => NonEmptyList(Left(s + "-"), tail).reverse
     }

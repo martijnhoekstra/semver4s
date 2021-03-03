@@ -172,7 +172,8 @@ object Matcher {
         case Major(major)        => that.major >= major
         case Minor(major, minor) => that.major > major || that.major == major && that.minor >= minor
         case Patch(major, minor, patch) =>
-          that.major > major || that.major == major && that.minor > minor || that.major == major && that.minor == minor && that.patch >= patch
+          that.major > major || that.major == major && that.minor > minor || that.major == major && that.minor == minor && that.patch > patch ||
+            that.major == major && that.minor == minor && that.patch == patch && that.pre.isEmpty
         case Pre(_, _, _, _) => that >= p.version
       }
 
