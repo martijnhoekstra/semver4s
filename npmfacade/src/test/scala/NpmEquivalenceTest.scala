@@ -24,11 +24,11 @@ class NpmEquivalenceTest extends munit.ScalaCheckSuite {
 
   val jsSafeVersion = genVersion.retryUntil(isJsSafeVersion)
   val jsSafePrimitive =
-    genPrimitive.retryUntil(s => s.length <= 256 && matcher(s).exists(isJsSafeMatcher))
+    genPrimitive.retryUntil(s => s.length <= 256 && parseMatcher(s).exists(isJsSafeMatcher))
   val jsSafeTilde =
-    genTildeRange.retryUntil(s => s.length <= 256 && matcher(s).exists(isJsSafeMatcher))
+    genTildeRange.retryUntil(s => s.length <= 256 && parseMatcher(s).exists(isJsSafeMatcher))
   val jsSafeMatcher =
-    genRangeSet.retryUntil(s => s.length <= 256 && matcher(s).exists(isJsSafeMatcher))
+    genRangeSet.retryUntil(s => s.length <= 256 && parseMatcher(s).exists(isJsSafeMatcher))
 
   test("NPM semver satisfies works") {
     assert(NPMSemver.satisfies("1.2.3", "1.x"))
@@ -84,8 +84,8 @@ class NpmEquivalenceTest extends munit.ScalaCheckSuite {
   }
 
   def assertMatchEquiv(version: String, matcher: String) = {
-    val Right(v) = semver4s.version(version)
-    val Right(m) = semver4s.matcher(matcher)
+    val Right(v) = parseVersion(version)
+    val Right(m) = parseMatcher(matcher)
 
     //val matchingOptions = List(PreReleaseBehaviour.Loose -> MatchOptions.lenient, PreReleaseBehaviour.Strict -> MatchOptions.strict)
 
@@ -138,14 +138,24 @@ class NpmEquivalenceTest extends munit.ScalaCheckSuite {
     })
   }
 
-  /*
+  property("Semver4s and NPM are consistent in gt and lt comparison") {
+    import cats.syntax.all._
+    forAll(jsSafeVersion, jsSafeVersion)((v1, v2) => {
+      val gt4s  = v1 > v2
+      val lt4s  = v1 < v2
+      val gtnpm = NPMSemver.gt(v1.format, v2.format)
+      val ltnpm = NPMSemver.lt(v1.format, v2.format)
+      assertEquals(gtnpm, gt4s, clue(s"${v1.format} > ${v2.format}? npm says $gtnpm, we say $gt4s"))
+      assertEquals(ltnpm, lt4s, clue(s"${v1.format} < ${v2.format}? npm says $ltnpm, we say $lt4s"))
+    })
+  }
+
+  /* this test is too damn slow
+     I think it's the generators
   property("Semver4s and NPM are consistent in what versions satisfy a range") {
-    implicit def shrinkExplode[A]: Shrink[A] = Shrink((a: A) => throw new Exception(a.toString))
-    val start = java.time.Instant.now()
+    implicit def noShrink[A]: Shrink[A] = Shrink.shrinkAny
     forAll(jsSafeMatcher, jsSafeVersion)((rs, v) => {
-      val exp = java.time.Duration.between(start, java.time.Instant.now)
-      assert(exp.getSeconds < 100, clue(s"$rs, $v"))
-      val m = matcher(rs).toOption.get
+      val m = parseMatcher(rs).toOption.get
       //semver4s allows a bit more. Particularly, semver4s allows any numeric version part up to long
       //npm requires <= MaxSafeInteger
       val versionString = v.format
@@ -154,23 +164,8 @@ class NpmEquivalenceTest extends munit.ScalaCheckSuite {
       val explain = if (semver4sMatches) "semver4s matches, but npm doesn't"
                     else "npm matches, but semver4s doesn't"
       assertEquals(semver4sMatches, npmMatches, clue((rs, v.format, explain)))
-      assert(exp.getSeconds < 100, clue(s"$rs, $v"))
     })
   }
-
-
-  property("Semver4s and NPM are consistent in gt and lt comparison") {
-    import cats.syntax.all._
-    forAll(jsSafeVersion, jsSafeVersion)((v1, v2) => {
-      val gt4s = v1 > v2
-      val lt4s = v1 < v2
-      val gtnpm = NPMSemver.gt(v1.format, v2.format)
-      val ltnpm = NPMSemver.lt(v1.format, v2.format)
-      assertEquals(gtnpm, gt4s, clue(s"${v1.format} > ${v2.format}? npm says $gtnpm, we say $gt4s"))
-      assertEquals(ltnpm, lt4s, clue(s"${v1.format} < ${v2.format}? npm says $ltnpm, we say $lt4s"))
-    })
-  }
-
-   */
+  */
 
 }

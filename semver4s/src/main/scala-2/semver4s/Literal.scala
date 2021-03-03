@@ -10,14 +10,14 @@ object Literal {
   def versionImpl(c: Context)(s: c.Expr[String]) = versionFromTree(c)(s.tree)
   def matcherImpl(c: Context)(s: c.Expr[String]) = matcherFromTree(c)(s.tree)
 
-  def versionFromTree(c: Context)(t: c.Tree) = {
+  private def versionFromTree(c: Context)(t: c.Tree) = {
     import c.{universe => u}
     import u._
     t match {
       case u.Literal(u.Constant(s: String)) =>
         def r = new parsing.Reporter(s)
         semver4s
-          .version(s)
+          .parseVersion(s)
           .fold(
             e => c.abort(c.enclosingPosition, r.report(e).toList.mkString),
             _ => q"_root_.semver4s.parsing.SemverParser.semver.parseAll($s).toOption.get"
@@ -30,14 +30,14 @@ object Literal {
     }
   }
 
-  def matcherFromTree(c: Context)(t: c.Tree) = {
+  private def matcherFromTree(c: Context)(t: c.Tree) = {
     import c.{universe => u}
     import u._
     t match {
       case u.Literal(u.Constant(s: String)) =>
         def r = new parsing.Reporter(s)
         semver4s
-          .matcher(s)
+          .parseMatcher(s)
           .fold(
             e => c.abort(c.enclosingPosition, r.report(e).toList.mkString),
             _ => q"_root_.semver4s.parsing.MatcherParser.rangeSet.parseAll($s).toOption.get"
