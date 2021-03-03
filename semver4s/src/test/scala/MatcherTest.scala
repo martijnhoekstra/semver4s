@@ -135,10 +135,40 @@ class MatcherTest extends munit.ScalaCheckSuite {
   }
 
   property("caret equivalents from npm documentation") {
-    areEquivalent(m"^1.2.3", m">=1.2.3 <2.0.0") &&
-    areEquivalent(m"^0.2.3", m">=0.2.3 <0.3.0") &&
-    areEquivalent(m"^0.0.3", m">=0.0.3 <0.0.4") &&
-    areEquivalent(m"^0.0.3-beta", m">=0.0.3-beta <0.0.4")
+    val equivalences = List(
+      m"^1.2.3"      -> m">=1.2.3 <2.0.0",
+      m"^0.2.3"      -> m">=0.2.3 <0.3.0",
+      m"^0.0.3"      -> m">=0.0.3 <0.0.4",
+      m"^0.0.3-beta" -> m">=0.0.3-beta <0.0.4",
+      m"^1.2.x"      -> m">=1.2.0 <2.0.0",
+      m"^0.0.x"      -> m">=0.0.0 <0.1.0",
+      m"^0.0"        -> m">=0.0.0 <0.1.0",
+      m"^1.x"        -> m"1.0.0 <2.0.0",
+      m"^0.x"        -> m">=0.0.0 <1.0.0"
+    )
+    equivalences
+      .map { case (m1, m2) => areEquivalent(m1, m2) }
+      .reduce(_ && _)
+  }
+
+  property("tilde equivalents from npm documentation") {
+    val equivalences = List(
+      m"~1.2.3"        -> m">=1.2.3 <1.3.0",
+      m"~1.2"          -> m">=1.2.0 <1.3.0",
+      m"~1.2"          -> m"1.2.x",
+      m"~1"            -> m">=1.0.0 <2.0.0",
+      m"~1"            -> m"1.x",
+      m"~0.2.3"        -> m">=0.2.3 <0.3.0",
+      m"~0.2"          -> m">=0.2.0 <0.3.0",
+      m"~0.2"          -> m"0.2.x",
+      m"~0"            -> m">=0.0.0 <1.0.0",
+      m"~0"            -> m"0.x",
+      m"~1.2.3-beta.2" -> m">=1.2.3-beta.2 <1.3.0"
+    )
+
+    equivalences
+      .map { case (m1, m2) => areEquivalent(m1, m2) }
+      .reduce(_ && _)
   }
 
   property("caret equivalent to range") {
