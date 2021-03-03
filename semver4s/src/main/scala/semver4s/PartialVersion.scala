@@ -34,24 +34,24 @@ object Partial {
 
   case object Wild extends Partial {
     def increment = Wild
-    def version   = Version(0, 0, 0)
+    def version   = Version.unsafe(0, 0, 0)
   }
 
   sealed abstract case class Major(major: Long) extends Partial {
     def increment = unsafe(major + 1)
-    def version   = Version(major, 0, 0)
+    def version   = Version.unsafe(major, 0, 0)
   }
   sealed abstract case class Minor(major: Long, minor: Long) extends Partial {
     def incrementMajor = unsafe(major + 1)
     def increment = unsafe(major, minor + 1)
-    def version   = Version(major, minor, 0)
+    def version   = Version.unsafe(major, minor, 0)
   }
 
   sealed abstract case class Patch(major: Long, minor: Long, patch: Long) extends Partial {
     def incrementMajor = unsafe(major + 1)
     def incrementMinor = unsafe(major, minor + 1)
     def increment = unsafe(major, minor, patch + 1)
-    def version   = Version(major, minor, patch)
+    def version   = Version.unsafe(major, minor, patch)
   }
 
   sealed abstract case class Pre(major: Long, minor: Long, patch: Long, pre: SemVer.PreReleaseSuffix)
@@ -63,7 +63,7 @@ object Partial {
       case Left(str) => unsafe(major, minor, patch, NonEmptyList.fromListUnsafe(pre.init :+ Left(str + "-")))
       case Right(l) => unsafe(major, minor, patch, NonEmptyList.fromListUnsafe(pre.init :+ Right(l + 1)))
     }
-    def version   = Version(major, minor, patch, Some(pre), None)
+    def version   = Version.unsafe(major, minor, patch, pre)
   }
 
   def print(p: Partial): String = p match {

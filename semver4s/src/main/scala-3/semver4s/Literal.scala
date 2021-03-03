@@ -20,7 +20,7 @@ object Literal:
   given ToExpr[Version] with
     def apply(x: Version)(using Quotes): Expr[Version] = x match {
       case Version(maj, min, pat, pre, bld) =>
-        '{Version(${Expr(maj)}, ${Expr(min)}, ${Expr(pat)}, ${Expr(pre)}, ${Expr(bld)})}
+        '{Version.unsafe(${Expr(maj)}, ${Expr(min)}, ${Expr(pat)}, ${Expr(pre)}, ${Expr(bld)})}
     }
 
   given ToExpr[Matcher.Simple] with

@@ -78,10 +78,10 @@ object GenVersion {
   } yield CoreVersion(major, minor, patch)
 
   val genVersion: Gen[Version] = for {
-    core <- genCoreVersion
+    core @ CoreVersion(major, minor, patch) <- genCoreVersion
     pre  <- Gen.option(genPre)
   } yield {
-    val withPre = core.toVersion.copy(pre = pre)
+    val withPre = Version.unsafe(major, minor, patch, pre, None)
     if (withPre.format.length > 300) core.toVersion else withPre
   }
 }

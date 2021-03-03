@@ -48,12 +48,12 @@ object Matcher {
     }
   }
 
-  /** Caret ranges, flexible minor and patch
+  /** Caret ranges, flexible minor and patch, special handling for 0 prefixes
     */
   case class Caret(base: Partial) extends Simple {
     def matches(that: Version): Boolean = matches(that, Strict)
     def matches(that: Version, preBehaviour: PreReleaseBehaviour): Boolean = {
-      val lower = Matcher.gte(base)
+      val lower = gte(base)
       base match {
         case Wild               => true //^* kinda weird, but whatever
         case m @ Major(_)       => (lower && lt(m.increment)).matches(that, preBehaviour)
@@ -275,8 +275,8 @@ object Matcher {
     case GT(p: Pre)       => Exclusive(p.version)
     case GT(p)            => Inclusive(p.increment.version)
     case GTE(p)           => Inclusive(p.version)
-    case LT(_)            => Inclusive(Version(0, 0, 0))
-    case LTE(_)           => Inclusive(Version(0, 0, 0))
+    case LT(_)            => Inclusive(Version.unsafe(0, 0, 0))
+    case LTE(_)           => Inclusive(Version.unsafe(0, 0, 0))
   }
 
   /** The upper bound of the given matcher
@@ -299,7 +299,7 @@ object Matcher {
         case Patch(0, minor, _)  => Exclusive(Partial.unsafe(0, minor + 1).version)
         case Patch(major, _, _)  => Exclusive(Partial.unsafe(major).version)
         //^0.0.3-beta := >=0.0.3-beta <0.0.4 Note that prereleases in the 0.0.3 version only will be allowed, if they are greater than or equal to beta
-        case Pre(0, 0, pat, _) => Exclusive(Version(0, 0, pat + 1))
+        case pre @ Pre(0, 0, _, _) => Exclusive(pre.incrementPatch.version)
         //^1.2.3-beta.2 := >=1.2.3-beta.2 <2.0.0 //1.2.3-beta.4 would be allowed, but 1.2.4-beta.2 would not
         case Pre(0, min, _, _) => Exclusive(Partial.unsafe(0, min + 1).version)
         case Pre(maj, _, _, _) => Exclusive(Partial.unsafe(maj + 1).version)
@@ -321,11 +321,11 @@ object Matcher {
     case LT(p)    => Exclusive(p.version)
     case LTE(p) =>
       p match {
-        case Wild            => Unbounded
-        case Major(m)        => Exclusive(Version(m + 1, 0, 0))
-        case Minor(maj, min) => Exclusive(Version(maj, min + 1, 0))
-        case Patch(_, _, _)  => Inclusive(p.version)
-        case Pre(_, _, _, _) => Inclusive(p.version)
+        case Wild              => Unbounded
+        case maj @ Major(_)    => Exclusive(maj.increment.version)
+        case min @ Minor(_, _) => Exclusive(min.increment.version)
+        case Patch(_, _, _)    => Inclusive(p.version)
+        case Pre(_, _, _, _)   => Inclusive(p.version)
       }
     case And(simples) => simples.map(upperBound).reduceLeft(minUpper)
     case Or(ands)     => ands.map(upperBound).reduceLeft(maxUpper)
