@@ -46,10 +46,10 @@ object MatcherParser {
     star
       .as(Wild)
       .orElse(major.map {
-        case (maj, (List(min, pat), Some(pre))) => Pre(maj, min, pat, pre)
-        case (maj, (List(min, pat), None))      => Patch(maj, min, pat)
-        case (maj, (List(min), _))              => Minor(maj, min)
-        case (maj, _)                           => Major(maj)
+        case (maj, (List(min, pat), Some(pre))) => Partial.unsafe(maj, min, pat, pre)
+        case (maj, (List(min, pat), None))      => Partial.unsafe(maj, min, pat)
+        case (maj, (List(min), _))              => Partial.unsafe(maj, min)
+        case (maj, _)                           => Partial.unsafe(maj)
       })
 
   }
