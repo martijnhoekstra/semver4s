@@ -13,12 +13,22 @@ object Version {
 
   /** Construct a core version from major.minor.patch
     */
-  def apply(major: Long, minor: Long, patch: Long) = new Version(major, minor, patch, None, None)
+  def unsafe(major: Long, minor: Long, patch: Long) =
+    new Version(major, minor, patch, None, None) {}
+  def unsafe(major: Long, minor: Long, patch: Long, pre: SemVer.PreReleaseSuffix) =
+    new Version(major, minor, patch, Some(pre), None) {}
+  def unsafe(
+      major: Long,
+      minor: Long,
+      patch: Long,
+      pre: Option[SemVer.PreReleaseSuffix],
+      bld: Option[String]
+  ) = new Version(major, minor, patch, pre, bld) {}
 
   /** Construct a core version from major.minor.patch if all are Int
     */
-  def apply(major: Int, minor: Int, patch: Int) =
-    new Version(major.toLong, minor.toLong, patch.toLong, None, None)
+  def unsafe(major: Int, minor: Int, patch: Int) =
+    new Version(major.toLong, minor.toLong, patch.toLong, None, None) {}
 
   /** Version order, where each higher version sorts after a lower version
     */
@@ -27,20 +37,6 @@ object Version {
     Order.by((v: Version) => (v.major, v.minor, v.patch, v.pre))
   }
 
-  /** Increments the version number
-    *
-    * such that the returned number for version `v` is the lowest version that would match `>v`
-    */
-  def inc(v: Version): Version = v match {
-    case Version(maj, min, pat, Some(pre), _) => Version(maj, min, pat, Some(inc(pre)), None)
-    case Version(maj, min, pat, None, _)      => Version(maj, min, pat + 1)
-  }
-
-  private[this] def inc(suffix: SemVer.PreReleaseSuffix): SemVer.PreReleaseSuffix =
-    suffix.reverse match {
-      case NonEmptyList(Right(l), tail) => NonEmptyList(Right(l + 1), tail).reverse
-      case NonEmptyList(Left(s), tail)  => NonEmptyList(Left(s + "0"), tail).reverse
-    }
 }
 
 /** A semver version specification
@@ -48,14 +44,27 @@ object Version {
   * Consisting of a core version of major.minor.patch, potentially a pre-release
   * suffix and potentially build metadata
   */
-case class Version(
+sealed abstract case class Version(
     major: Long,
     minor: Long,
     patch: Long,
     pre: Option[SemVer.PreReleaseSuffix],
     build: Option[String]
 ) {
-  def coreVersion = CoreVersion(major, minor, patch)
+  def coreVersion    = new CoreVersion(major, minor, patch) {}
+  def incrementMajor = Version.unsafe(major + 1, 0, 0)
+  def incrementMinor = Version.unsafe(major, minor + 1, 0)
+  def incrementPatch = Version.unsafe(major, minor, patch + 1)
+  def increment = {
+    def inc(suffix: SemVer.PreReleaseSuffix): SemVer.PreReleaseSuffix = suffix.reverse match {
+      case NonEmptyList(Right(l), tail) => NonEmptyList(Right(l + 1), tail).reverse
+      case NonEmptyList(Left(s), tail)  => NonEmptyList(Left(s + "-"), tail).reverse
+    }
+    pre match {
+      case None         => incrementPatch
+      case Some(prefix) => Version.unsafe(major, minor, patch, inc(prefix))
+    }
+  }
 
   /** The version, formatted in SemVer format
     */
@@ -67,6 +76,13 @@ case class Version(
   }
 }
 
-case class CoreVersion(major: Long, minor: Long, patch: Long) {
-  def toVersion = Version(major, minor, patch)
+sealed abstract case class CoreVersion(major: Long, minor: Long, patch: Long) {
+  def toVersion = Version.unsafe(major, minor, patch)
+}
+
+object CoreVersion {
+  def apply(major: Long, minor: Long, patch: Long) = if (major >= 0 && minor >= 0 && patch >= 0)
+    Some(new CoreVersion(major, minor, patch) {})
+  else None
+  def unsafe(major: Long, minor: Long, patch: Long) = new CoreVersion(major, minor, patch) {}
 }

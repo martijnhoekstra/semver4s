@@ -32,12 +32,12 @@ object SemverParser {
   val preRelease: P[NonEmptyList[PreIdentifier]] =
     P.char('-') *> prereleaseIdentifier.repSep(dot)
 
-  val versionCore: P[CoreVersion] = (long, dot *> long, dot *> long).mapN(CoreVersion.apply)
+  val versionCore: P[CoreVersion] = (long, dot *> long, dot *> long).mapN(CoreVersion.unsafe)
 
   val semver: P[Version] =
     (P.charIn('v', '=').?).with1 *> (versionCore ~ preRelease.? ~ build.?).map {
       case ((CoreVersion(major, minor, patch), pre), bld) =>
-        Version(major, minor, patch, pre, bld)
+        Version.unsafe(major, minor, patch, pre, bld)
     }
 
 }

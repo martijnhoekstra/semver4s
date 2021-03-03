@@ -173,10 +173,17 @@ class MatcherTest extends munit.ScalaCheckSuite {
       m"~0"            -> m"0.x",
       m"~1.2.3-beta.2" -> m">=1.2.3-beta.2 <1.3.0"
     )
-
     equivalences
       .map { case (m1, m2) => areEquivalent(m1, m2) }
       .reduce(_ && _)
+  }
+
+  test("tilde equivalent minor") {
+    val tilde   = m"~0.2.*"
+    val and     = m">=0.2.0 <0.3.0"
+    val version = v"0.2.0-pre"
+    assert(!tilde.matches(version), clue((tilde.toString, version.format)))
+    assert(!and.matches(version), clue((and.toString, version.format)))
   }
 
   property("caret equivalent to range") {

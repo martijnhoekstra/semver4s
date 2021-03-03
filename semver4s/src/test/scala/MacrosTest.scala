@@ -3,7 +3,7 @@ package semver4s
 class MacrosTest extends munit.ScalaCheckSuite {
   import Literal._
   test("version interpolator") {
-    assertEquals(Version(1, 2, 3), v"1.2.3")
+    assertEquals(Version.unsafe(1, 2, 3), v"1.2.3")
   }
 
   test("matcher interpolator") {

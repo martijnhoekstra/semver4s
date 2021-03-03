@@ -48,25 +48,25 @@ object Matcher {
     }
   }
 
-  /** Caret ranges, flexible minor and patch
+  /** Caret ranges, flexible minor and patch, special handling for 0 prefixes
     */
-  case class Caret(p: Partial) extends Simple {
+  case class Caret(base: Partial) extends Simple {
     def matches(that: Version): Boolean = matches(that, Strict)
     def matches(that: Version, preBehaviour: PreReleaseBehaviour): Boolean = {
-      val lower = Matcher.gte(p)
-      p match {
+      val lower = gte(base)
+      base match {
         case Wild               => true //^* kinda weird, but whatever
-        case Major(m)           => (lower && LT(Major(m + 1))).matches(that, preBehaviour)
-        case Minor(0, m)        => (lower && lt(Minor(0, m + 1))).matches(that, preBehaviour)
-        case Minor(m, _)        => (lower && LT(Major(m + 1))).matches(that, preBehaviour)
-        case Patch(0, 0, _)     => Matcher.eqv(p).matches(that, preBehaviour)
-        case Patch(0, minor, _) => (lower && LT(Minor(0, minor + 1))).matches(that, preBehaviour)
-        case Patch(major, _, _) => (lower && LT(Major(major + 1))).matches(that, preBehaviour)
-        //^0.0.3-beta := >=0.0.3-beta <0.0.4 Note that prereleases in the 0.0.3 version only will be allowed, if they are greater than or equal to beta
-        case Pre(0, 0, pat, _) => (lower && LT(Patch(0, 0, pat + 1))).matches(that, preBehaviour)
+        case m @ Major(_)       => (lower && lt(m.increment)).matches(that, preBehaviour)
+        case m @ Minor(0, _)    => (lower && lt(m.increment)).matches(that, preBehaviour)
+        case m @ Minor(_, _)    => (lower && lt(m.incrementMajor)).matches(that, preBehaviour)
+        case Patch(0, 0, _)     => Matcher.eqv(base).matches(that, preBehaviour)
+        case p @ Patch(0, _, _) => (lower && lt(p.incrementMinor)).matches(that, preBehaviour)
+        case p @ Patch(_, _, _) => (lower && lt(p.incrementMajor)).matches(that, preBehaviour)
+        //^0.0.3-beta := >=0.0.3-beta <0.0.4
+        case p @ Pre(0, 0, _, _) => (lower && lt(p.incrementPatch)).matches(that, preBehaviour)
         //^1.2.3-beta.2 := >=1.2.3-beta.2 <2.0.0 //1.2.3-beta.4 would be allowed, but 1.2.4-beta.2 would not
-        case Pre(0, min, _, _) => (lower && LT(Minor(0, min + 1))).matches(that, preBehaviour)
-        case Pre(maj, _, _, _) => (lower && LT(Major(maj + 1))).matches(that, preBehaviour)
+        case p @ Pre(0, _, _, _) => (lower && lt(p.incrementMinor)).matches(that, preBehaviour)
+        case p @ Pre(_, _, _, _) => (lower && lt(p.incrementMajor)).matches(that, preBehaviour)
       }
     }
   }
@@ -78,16 +78,13 @@ object Matcher {
     def matches(that: Version, preBehaviour: PreReleaseBehaviour): Boolean = {
       val lower = GTE(p)
       p match {
-        case Wild         => true                                                        //~* kinda weird, but whatever
-        case Major(major) => (lower && LT(Major(major + 1))).matches(that, preBehaviour) //same as ^
-        case Minor(major, minor) =>
-          (lower && LT(Minor(major, minor + 1))).matches(that, preBehaviour)
-        case Patch(major, minor, _) =>
-          (lower && LT(Minor(major, minor + 1))).matches(that, preBehaviour)
+        case Wild               => true                                                   //~* kinda weird, but whatever
+        case m @ Major(_)       => (lower && lt(m.increment)).matches(that, preBehaviour) //same as ^
+        case m @ Minor(_, _)    => (lower && lt(m.increment)).matches(that, preBehaviour)
+        case p @ Patch(_, _, _) => (lower && lt(p.incrementMinor)).matches(that, preBehaviour)
         //~1.2.3-beta.2: >=1.2.3-beta.2 <1.3.0
         //1.2.3-beta.4 would be allowed, but 1.2.4-beta.2 would not
-        case Pre(major, minor, _, _) =>
-          (lower && LT(Minor(major, minor + 1))).matches(that, preBehaviour)
+        case p @ Pre(_, _, _, _) => (lower && LT(p.incrementMinor)).matches(that, preBehaviour)
       }
     }
   }
@@ -135,7 +132,7 @@ object Matcher {
     }
   }
 
-  def preOK(p: Partial, preBehaviour: PreReleaseBehaviour, v: Version) = {
+  private def preOK(p: Partial, preBehaviour: PreReleaseBehaviour, v: Version) = {
     def onSamePatch = p match {
       case Patch(v.major, v.minor, v.patch) | Pre(v.major, v.minor, v.patch, _) => true
       case _                                                                    => false
@@ -143,7 +140,7 @@ object Matcher {
 
     v.pre.isEmpty ||
     preBehaviour == PreReleaseBehaviour.Loose ||
-    (preBehaviour == PreReleaseBehaviour.Strict && onSamePatch)
+    preBehaviour == PreReleaseBehaviour.Strict && onSamePatch
   }
 
   case class GT(p: Partial) extends Primitive {
@@ -175,7 +172,8 @@ object Matcher {
         case Major(major)        => that.major >= major
         case Minor(major, minor) => that.major > major || that.major == major && that.minor >= minor
         case Patch(major, minor, patch) =>
-          that.major > major || that.major == major && that.minor > minor || that.major == major && that.minor == minor && that.patch >= patch
+          that.major > major || that.major == major && that.minor > minor || that.major == major && that.minor == minor && that.patch > patch ||
+            that.major == major && that.minor == minor && that.patch == patch && that.pre.isEmpty
         case Pre(_, _, _, _) => that >= p.version
       }
 
@@ -276,10 +274,11 @@ object Matcher {
     case Or(ands)         => ands.map(lowerBound).reduceLeft(minLower)
     case Exact(p)         => Inclusive(p.version)
     case GT(p: Pre)       => Exclusive(p.version)
+    case GT(Wild)         => Exclusive(Version.unsafe(0, 0, 0))
     case GT(p)            => Inclusive(p.increment.version)
     case GTE(p)           => Inclusive(p.version)
-    case LT(_)            => Inclusive(Version(0, 0, 0))
-    case LTE(_)           => Inclusive(Version(0, 0, 0))
+    case LT(_)            => Inclusive(Version.unsafe(0, 0, 0))
+    case LTE(_)           => Inclusive(Version.unsafe(0, 0, 0))
   }
 
   /** The upper bound of the given matcher
@@ -293,30 +292,27 @@ object Matcher {
         case p: Patch => Inclusive(p.version)
         case p: Pre   => Inclusive(p.version)
       }
-    case Caret(p) =>
-      p match {
-        case Wild                => Unbounded //^* kinda weird, but whatever
-        case Major(m)            => Exclusive(Major(m + 1).version)
-        case Minor(major, minor) => Exclusive(Minor(major, minor + 1).version)
-        case Patch(0, 0, _)      => Inclusive(p.version)
-        case Patch(0, minor, _)  => Exclusive(Minor(0, minor + 1).version)
-        case Patch(major, _, _)  => Exclusive(Major(major).version)
+    case Caret(part) =>
+      part match {
+        case Wild               => Unbounded //^* kinda weird, but whatever
+        case m @ Major(_)       => Exclusive(m.increment.version)
+        case m @ Minor(_, _)    => Exclusive(m.increment.version)
+        case p @ Patch(0, 0, _) => Inclusive(p.version)
+        case p @ Patch(0, _, _) => Exclusive(p.incrementMinor.version)
+        case p @ Patch(_, _, _) => Exclusive(p.incrementMajor.version)
         //^0.0.3-beta := >=0.0.3-beta <0.0.4 Note that prereleases in the 0.0.3 version only will be allowed, if they are greater than or equal to beta
-        case Pre(0, 0, pat, _) => Exclusive(Version(0, 0, pat + 1))
+        case pre @ Pre(0, 0, _, _) => Exclusive(pre.incrementPatch.version)
         //^1.2.3-beta.2 := >=1.2.3-beta.2 <2.0.0 //1.2.3-beta.4 would be allowed, but 1.2.4-beta.2 would not
-        case Pre(0, min, _, _) => Exclusive(Minor(0, min + 1).version)
-        case Pre(maj, _, _, _) => Exclusive(Major(maj + 1).version)
+        case pre @ Pre(0, _, _, _) => Exclusive(pre.incrementMinor.version)
+        case pre @ Pre(_, _, _, _) => Exclusive(pre.incrementMajor.version)
       }
-    case Tilde(p) =>
-      p match {
-        case Wild         => Unbounded                           //~* kinda weird, but whatever
-        case Major(major) => Exclusive(Major(major + 1).version) //same as caret
-        case Minor(major, minor) =>
-          Exclusive(Minor(major, minor + 1).version) //in the glorious future
-        case Patch(major, minor, _) =>
-          Exclusive(Minor(major, minor + 1).version) //binders should be
-        case Pre(major, minor, _, _) =>
-          Exclusive(Minor(major, minor + 1).version) //allowed in alternative
+    case Tilde(part) =>
+      part match {
+        case Wild                => Unbounded                           //~* kinda weird, but whatever
+        case m @ Major(_)        => Exclusive(m.increment.version)      //same as caret
+        case m @ Minor(_, _)     => Exclusive(m.increment.version)      //in the glorious future
+        case p @ Patch(_, _, _)  => Exclusive(p.incrementMinor.version) //binders should be
+        case p @ Pre(_, _, _, _) => Exclusive(p.incrementMinor.version) //allowed in alternative
       }
     case Exact(p) => Exclusive(p.increment.version)
     case GT(_)    => Unbounded
@@ -324,11 +320,11 @@ object Matcher {
     case LT(p)    => Exclusive(p.version)
     case LTE(p) =>
       p match {
-        case Wild            => Unbounded
-        case Major(m)        => Exclusive(Version(m + 1, 0, 0))
-        case Minor(maj, min) => Exclusive(Version(maj, min + 1, 0))
-        case Patch(_, _, _)  => Inclusive(p.version)
-        case Pre(_, _, _, _) => Inclusive(p.version)
+        case Wild              => Unbounded
+        case maj @ Major(_)    => Exclusive(maj.increment.version)
+        case min @ Minor(_, _) => Exclusive(min.increment.version)
+        case Patch(_, _, _)    => Inclusive(p.version)
+        case Pre(_, _, _, _)   => Inclusive(p.version)
       }
     case And(simples) => simples.map(upperBound).reduceLeft(minUpper)
     case Or(ands)     => ands.map(upperBound).reduceLeft(maxUpper)

@@ -20,7 +20,7 @@ object Literal:
   given ToExpr[Version] with
     def apply(x: Version)(using Quotes): Expr[Version] = x match {
       case Version(maj, min, pat, pre, bld) =>
-        '{Version(${Expr(maj)}, ${Expr(min)}, ${Expr(pat)}, ${Expr(pre)}, ${Expr(bld)})}
+        '{Version.unsafe(${Expr(maj)}, ${Expr(min)}, ${Expr(pat)}, ${Expr(pre)}, ${Expr(bld)})}
     }
 
   given ToExpr[Matcher.Simple] with
@@ -57,10 +57,10 @@ object Literal:
     import Partial._
     def apply(x: Partial)(using Quotes): Expr[Partial] = x match {
       case Wild => '{Partial.Wild}
-      case Major(m) => '{Partial.Major(${Expr(m)})}
-      case Minor(maj, min) => '{Partial.Minor(${Expr(maj)}, ${Expr(min)})}
-      case Patch(maj, min, pat) => '{Partial.Patch(${Expr(maj)}, ${Expr(min)}, ${Expr(pat)})}
-      case Pre(maj, min, pat, pre) => '{Partial.Pre(${Expr(maj)}, ${Expr(min)}, ${Expr(pat)}, ${Expr(pre)})}
+      case Major(m) => '{Partial.unsafe(${Expr(m)})}
+      case Minor(maj, min) => '{Partial.unsafe(${Expr(maj)}, ${Expr(min)})}
+      case Patch(maj, min, pat) => '{Partial.unsafe(${Expr(maj)}, ${Expr(min)}, ${Expr(pat)})}
+      case Pre(maj, min, pat, pre) => '{Partial.unsafe(${Expr(maj)}, ${Expr(min)}, ${Expr(pat)}, ${Expr(pre)})}
     }
 
   given [T: ToExpr : Type]: ToExpr[NonEmptyList[T]] with

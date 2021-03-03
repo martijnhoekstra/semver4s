@@ -24,9 +24,9 @@ object SemverApp
   val versions = Opts.argument[NonEmptyList[Version]](metavar = "versions")
   val range    = Opts.argument[Matcher](metavar = "range")
 
-  val inc = Opts.subcommand("inc", "increment the version") {
+  val inc = Opts.subcommand("inc", "increment the patch version") {
     version.map { v =>
-      IO(println(Version.inc(v).format)).map(_ => ExitCode.Success)
+      IO(println(v.incrementPatch.format)).map(_ => ExitCode.Success)
     }
   }
 
