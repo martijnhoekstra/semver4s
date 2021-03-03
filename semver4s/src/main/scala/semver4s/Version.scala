@@ -57,7 +57,7 @@ sealed abstract case class Version(
     pre: Option[SemVer.PreReleaseSuffix],
     build: Option[String]
 ) {
-  def coreVersion = CoreVersion(major, minor, patch)
+  def coreVersion = new CoreVersion(major, minor, patch){}
   def incrementMajor = Version.unsafe(major + 1, 0, 0)
   /** The version, formatted in SemVer format
     */
@@ -69,6 +69,11 @@ sealed abstract case class Version(
   }
 }
 
-case class CoreVersion(major: Long, minor: Long, patch: Long) {
+sealed abstract case class CoreVersion(major: Long, minor: Long, patch: Long) {
   def toVersion = Version.unsafe(major, minor, patch)
+}
+
+object CoreVersion {
+  def apply(major: Long, minor: Long, patch: Long) = if(major >= 0 && minor >= 0 && patch >= 0) Some(new CoreVersion(major, minor, patch){}) else None
+  def unsafe(major: Long, minor: Long, patch: Long) = new CoreVersion(major, minor, patch){}
 }
