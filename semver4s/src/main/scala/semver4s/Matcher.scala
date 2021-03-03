@@ -39,13 +39,8 @@ object Matcher {
     */
   case class Hyphen(lower: Partial, upper: Partial) extends Simple {
     def matches(version: Version): Boolean = matches(version, Strict)
-    def matches(version: Version, pre: PreReleaseBehaviour): Boolean = {
-      val upperMatcher = upper match {
-        case Patch(_, _, _) | Pre(_, _, _, _) => LTE(upper)
-        case _                                => LT(upper)
-      }
-      lower.version <= version && upperMatcher.matches(version, pre)
-    }
+    def matches(version: Version, pre: PreReleaseBehaviour): Boolean =
+      lower.version <= version && lte(upper).matches(version, pre)
   }
 
   /** Caret ranges, flexible minor and patch, special handling for 0 prefixes
