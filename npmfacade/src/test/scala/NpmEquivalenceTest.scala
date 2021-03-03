@@ -166,6 +166,6 @@ class NpmEquivalenceTest extends munit.ScalaCheckSuite {
       assertEquals(semver4sMatches, npmMatches, clue((rs, v.format, explain)))
     })
   }
-  */
+   */
 
 }
