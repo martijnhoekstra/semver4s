@@ -99,7 +99,41 @@ class NpmEquivalenceTest extends munit.ScalaCheckSuite {
 
   property("Semver4s and NPM are consistent in what versions satisfy a primitive range") {
     implicit def noShrink[A]: Shrink[A] = Shrink.shrinkAny
+    /*
+    debug stuff for timings (hint: genMatcher is really slow. But why? todo: AsyncProfiler that shit)
+    import java.time._
+    var last = Instant.now()
+    val durations = new scala.collection.mutable.ListBuffer[(String, Duration, Duration)]()
+    def showTimings() = {
+      println("The timings!")
+      println("")
+      val ds = durations.toList
+      println("top by gen time:")
+      ds.sortBy{ case (_, _, d) => (d.getSeconds(), d.getNano)}.reverse.take(3).zipWithIndex.foreach {
+        case ((str, _, d), i) => println(s"(${i + 1}) $str: $d")
+      }
+      println("top by test time:")
+      ds.sortBy{ case (_, d, _) => (d.getSeconds(), d.getNano)}.reverse.take(3).zipWithIndex.foreach {
+        case ((str, d, _), i) => println(s"(${i + 1}) $str: $d")
+      }
+    }
+    var i = 0; */
     forAll(jsSafePrimitive, jsSafeVersion)((rs, v) => {
+      //val startTest = Instant.now()
+      assertMatchEquiv(v.format, rs)
+      //val endTest = Instant.now()
+      //val testDuration = Duration.between(startTest, endTest)
+      //val genDuration = Duration.between(last, startTest)
+      //durations += ((rs, testDuration, genDuration))
+      //last = endTest
+      //i += 1
+      //if (i == 100) showTimings()
+    })
+  }
+
+  property("Semver4s and NPM are consistent in what versions satisfy a tilde range") {
+    implicit def noShrink[A]: Shrink[A] = Shrink.shrinkAny
+    forAll(jsSafeTilde, jsSafeVersion)((rs, v) => {
       assertMatchEquiv(v.format, rs)
     })
   }
