@@ -188,14 +188,14 @@ class MatcherTest extends munit.ScalaCheckSuite {
 
   property("caret equivalent to range") {
     val tilde = m"^2.12.13"
-    val range = m"2.12.13 - 3"
+    val range = m"2.12.13 - 2"
     areEquivalent(tilde, range)
   }
 
   test("hyphen range examples right partial") {
     val range       = m"2.12.13 - 3"
-    val matching    = List(v"2.12.13", v"2.12.20", v"2.13.0", v"2.13.1", v"2.14.0")
-    val notMatching = List(v"3.0.0", v"3.0.0-RC1", v"3.1.0")
+    val matching    = List(v"2.12.13", v"2.12.20", v"2.13.0", v"2.13.1", v"2.14.0", v"3.0.0", v"3.1.0")
+    val notMatching = List(v"3.0.0-RC1", v"4.0.0", v"4.0.0-rc1")
     for (v <- matching) assert(clue(range).matches(clue(v)))
     for (v <- notMatching) assert(!clue(range).matches(clue(v)))
   }
