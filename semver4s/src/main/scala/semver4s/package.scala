@@ -7,13 +7,13 @@
   * provides, though as of now, it still falls short of that.
   *
   * It does so through the types [[Matcher]] and [[Version]]. You can parse matcher
-  * or version strings with [[semver4s.parseMatcher]] and [[semver4s.parserVersion]].
+  * or version strings with [[semver4s.parseMatcher]] and [[semver4s.parseVersion]].
   *
   * For supported ranges, see the NPM documentation over at https://www.npmjs.com/package/semver#ranges
   *
-  * For literals, you have the interpolators [[Literal.m]] and [[Literal.v]], so
-  * you can write, for example a literal version `v"1.2.3"` or literal matcher
-  * `m"~1.3.2 || 2.0.x - 2.2.x"`, which are parsed and checked at compile time.
+  * For literals, importing [[Literal]]._ brings the interpolators m and v in scope,
+  * which you can use to write, for example a literal version `v"1.2.3"` or literal matcher
+  * `m"~1.3.2 || 2.0.x - 2.2.x"`, which are parsed and validated at compile time.
   */
 package object semver4s {
   import parsing._
@@ -30,14 +30,14 @@ package object semver4s {
   /** Parsers a string into a matcher, or an error with information where
     * the parse failed.
     *
-    * To match a literal string, use [[Literal.matcher]] or [[Literal.m]]
+    * To match a literal string, use [[Literal.matcher]] or the m interpolator
     */
   def parseMatcher(matcherString: String) = matcherParser.parseAll(matcherString)
 
   /** Parsers a string into a version, or an error with information where
     * the parse failed.
     *
-    * To match a literal string, use [[Literal.version]] or [[Literal.v]]
+    * To match a literal string, use [[Literal.version]] or the v interpolator
     */
   def parseVersion(versionString: String) = semverParser.parseAll(versionString)
 }
