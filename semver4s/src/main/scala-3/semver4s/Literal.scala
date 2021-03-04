@@ -18,14 +18,13 @@ object Literal:
     })
 
   given ToExpr[Version] with
-    def apply(x: Version)(using Quotes): Expr[Version] = x match {
+    def apply(x: Version)(using Quotes): Expr[Version] = x match
       case Version(maj, min, pat, pre, bld) =>
         '{Version.unsafe(${Expr(maj)}, ${Expr(min)}, ${Expr(pat)}, ${Expr(pre)}, ${Expr(bld)})}
-    }
 
   given ToExpr[Matcher.Simple] with
     import Matcher._
-    def apply(m: Simple)(using Quotes): Expr[Simple] = m match {
+    def apply(m: Simple)(using Quotes): Expr[Simple] = m match
       case Hyphen(below, above) => '{Hyphen(${Expr(below)}, ${Expr(above)})}
       case Caret(p) => '{Caret(${Expr(p)})}
       case Tilde(p) => '{Tilde(${Expr(p)})}
@@ -34,7 +33,6 @@ object Literal:
       case GTE(p) => '{GTE(${Expr(p)})}
       case LT(p) => '{LT(${Expr(p)})}
       case LTE(p) => '{LTE(${Expr(p)})}
-    }
 
   given ToExpr[Matcher.And] with
     import Matcher._
@@ -46,22 +44,20 @@ object Literal:
 
   given ToExpr[Matcher] with
     import Matcher._
-    def apply(m: Matcher)(using Quotes): Expr[Matcher] = m match {
+    def apply(m: Matcher)(using Quotes): Expr[Matcher] = m match
       case s: Simple => Expr(s)
       case o: Or => Expr(o)
       case a: And => Expr(a)
-    }
 
 
   given ToExpr[Partial] with
     import Partial._
-    def apply(x: Partial)(using Quotes): Expr[Partial] = x match {
+    def apply(x: Partial)(using Quotes): Expr[Partial] = x match
       case Wild => '{Partial.Wild}
       case Major(m) => '{Partial.unsafe(${Expr(m)})}
       case Minor(maj, min) => '{Partial.unsafe(${Expr(maj)}, ${Expr(min)})}
       case Patch(maj, min, pat) => '{Partial.unsafe(${Expr(maj)}, ${Expr(min)}, ${Expr(pat)})}
       case Pre(maj, min, pat, pre) => '{Partial.unsafe(${Expr(maj)}, ${Expr(min)}, ${Expr(pat)}, ${Expr(pre)})}
-    }
 
   given [T: ToExpr : Type]: ToExpr[NonEmptyList[T]] with
     def apply(xs: NonEmptyList[T])(using Quotes) =
@@ -77,18 +73,16 @@ object Literal:
     val sc = esc.valueOrError
     sc.parts match
       case List(single: String) => versionImpl(Expr(single))
-      case _ => {
-        quotes.reflect.report.error("version interpolator allows only single string")
+      case _ =>
+        quotes.reflect.report.error("version interpolator is not allowed to have any interpolated values")
         ???
-      }
   }
 
   private def interpolatedMatcherImpl(esc: Expr[StringContext])(using Quotes) = {
     val sc = esc.valueOrError
     sc.parts match
       case List(single: String) => matcherImpl(Expr(single))
-      case _ => {
-        quotes.reflect.report.error("matcher interpolator allows only single string")
+      case _ =>
+        quotes.reflect.report.error("matcher interpolator is not allowed to have any interpolated values")
         ???
-      }
   }
