@@ -43,7 +43,7 @@ lazy val lib = projectMatrix
   .in(file("semver4s"))
   .settings(
     name := "semver4s",
-    version := "0.3.0",
+    version := "0.4.0",
     libraryDependencies ++= List(
       "org.typelevel" %%% "cats-parse"       % "0.3.1",
       "org.scalameta" %%% "munit"            % "0.7.22" % "test",
@@ -90,7 +90,8 @@ lazy val npmfacade = projectMatrix
     testFrameworks += new TestFramework("munit.Framework"),
     name := "npmFacade",
     version := "0.0.1",
-    npmDependencies in Test += "semver" -> "7.3.4",
+    Test / npmDependencies += "semver" -> "7.3.4",
+    publish / skip := true,
     libraryDependencies ++= List(
       "org.scalameta"     %%% "munit"            % "0.7.22" % "test",
       "org.scalameta"     %%% "munit-scalacheck" % "0.7.22" % "test",
