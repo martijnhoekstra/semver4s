@@ -1,4 +1,4 @@
-addSbtPlugin("ch.epfl.lamp"              % "sbt-dotty"           % "0.5.3")
+addSbtPlugin("ch.epfl.lamp"              % "sbt-dotty"           % "0.5.4")
 addSbtPlugin("io.github.davidgregory084" % "sbt-tpolecat"        % "0.1.17")
 addSbtPlugin("org.xerial.sbt"            % "sbt-sonatype"        % "3.9.7")
 addSbtPlugin("com.jsuereth"              % "sbt-pgp"             % "2.1.1")
