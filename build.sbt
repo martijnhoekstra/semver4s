@@ -20,7 +20,7 @@ ThisBuild / developers := List(
 
 //attempt not to grind to a halt
 ThisBuild / concurrentRestrictions ++= {
-  if (sys.env.contains("CI")) List(Tags.limitAll(2)) else Nil
+  if (sys.env.contains("CI")) List(Tags.limitAll(1)) else Nil
 }
 
 val batchModeOnCI =
