@@ -7,8 +7,8 @@ import cats.data.NonEmptyList
 object GenVersion {
 
   val smallishLong = {
-    val unmaskBits = Gen.chooseNum(0, 64)
-    val masks      = unmaskBits.map(-1L >>> _)
+    val unmaskBits = Gen.choose(0, 64)
+    val masks      = unmaskBits.map(bits => ~(-1L << bits))
     for {
       mask <- masks
       num  <- Gen.choose(Long.MinValue, 0L)
@@ -16,9 +16,9 @@ object GenVersion {
     } yield flip * (mask & num)
   }
 
-  val smallishInt = {
-    val unmaskBits = Gen.chooseNum(0, 32)
-    val masks      = unmaskBits.map(-1 >>> _)
+  def smallishInt(maxbits: Int = 32) = {
+    val unmaskBits = Gen.choose(0, maxbits)
+    val masks      = unmaskBits.map(bits => ~(-1 << bits))
     for {
       mask <- masks
       num  <- Gen.choose(Int.MinValue, 0)
@@ -27,7 +27,7 @@ object GenVersion {
   }
 
   val smallishNNLong = smallishLong.map(math.abs)
-  val smallishNNInt  = smallishInt.map(math.abs)
+  val smallishNNInt  = smallishInt(12).map(math.abs)
 
   def numBetween(min: Long, max: Long, specials: Long*): Gen[Long] = {
     require(min <= max)
@@ -35,11 +35,17 @@ object GenVersion {
     else {
       val mid        = min + (max - min) / 2
       val deviations = Gen.oneOf(Gen.const(0L), smallishLong)
-      val rough = for {
-        base <- Gen.oneOf(min :: max :: mid :: specials.toList)
+      for {
+        base <- Gen.oneOf(min :: max :: mid :: specials.filter(x => x > min && x < max).toList)
         d    <- deviations
-      } yield base + d
-      rough.retryUntil(r => r >= min && r <= max)
+      } yield {
+        val rough = base + d
+        val rough1 =
+          if (rough > max) base - math.abs(d)
+          else if (rough < max) base + math.abs(d)
+          else rough
+        math.max(min, math.min(max, rough1))
+      }
     }
   }
 
@@ -48,23 +54,35 @@ object GenVersion {
     if (min == max) Gen.const(min)
     else {
       val mid        = min + (max - min) / 2
-      val deviations = Gen.oneOf(Gen.const(0), smallishInt)
-      val rough = for {
-        base <- Gen.oneOf(min :: max :: mid :: specials.toList)
+      val deviations = Gen.oneOf(Gen.const(0), smallishInt())
+      for {
+        base <- Gen.oneOf(min :: max :: mid :: specials.filter(x => x > min && x < max).toList)
         d    <- deviations
-      } yield base + d
-      rough.retryUntil(r => r >= min && r <= max)
+      } yield {
+        val rough = base + d
+        val rough1 =
+          if (rough > max) base - math.abs(d)
+          else if (rough < max) base + math.abs(d)
+          else rough
+        math.max(min, math.min(max, rough1))
+      }
     }
   }
 
   val nonNegativeLong = numBetween(0L, Long.MaxValue)
 
   val genNumericId: Gen[SemVer.Identifier] = smallishNNLong.map(_.asRight[String])
-  val genAlphaId: Gen[SemVer.Identifier] = numBetween(1, 255).flatMap { length =>
-    Gen
-      .stringOfN(length, GenMatcher.genIdChar)
-      .retryUntil(str => str.exists(ch => !ch.isDigit))
-      .map(_.asLeft[Long])
+  val genAlphaId: Gen[SemVer.Identifier] = {
+    def fixup(str: String): Gen[String] = for {
+      i  <- numBetween(0, str.length - 1)
+      ch <- GenMatcher.genNonNumIdChar
+    } yield str.updated(i, ch)
+
+    for {
+      len     <- numBetween(1, 255)
+      attempt <- Gen.stringOfN(len, GenMatcher.genIdChar)
+      fixed   <- if (attempt.forall(_.isDigit)) fixup(attempt) else Gen.const(attempt)
+    } yield fixed.asLeft[Long]
   }
 
   val genPreId: Gen[SemVer.Identifier] = Gen.oneOf(genNumericId, genAlphaId)
