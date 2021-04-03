@@ -6,12 +6,12 @@ object GenMatcher {
   import GenVersion.nonNegativeLong
 
   val genOp = Gen.oneOf(">", "=", "<", ">=", "<=")
-  val genIdChar = Gen.oneOf(
+  val genNonNumIdChar = Gen.oneOf(
     Gen.const('-'),
-    Gen.choose('0', '9'),
     Gen.choose('A', 'Z'),
     Gen.choose('a', 'z')
   )
+  val genIdChar = Gen.oneOf(genNonNumIdChar, Gen.choose('0', '9'))
 
   val genId = GenVersion.genPreId.map(_.fold(identity, _.toString()))
 
@@ -19,9 +19,10 @@ object GenMatcher {
 
   val genPartial = {
     val wild = Gen.oneOf("", ".x", ".X", ".*")
+    val es   = Gen.const("")
     val genPatch = for {
       patch <- nonNegativeLong
-      pre   <- Gen.oneOf(Gen.const(""), genPre)
+      pre   <- Gen.oneOf(es, genPre)
     } yield "." + patch + pre
 
     val genMinor = for {
