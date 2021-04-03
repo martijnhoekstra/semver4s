@@ -188,7 +188,9 @@ object Matcher {
         p match {
           case Wild => true
           case Pre(major, minor, patch, pre) =>
-            CoreVersion(major, minor, patch) == that.coreVersion && that.pre < Option(pre)
+            CoreVersion(major, minor, patch).get == that.coreVersion && that.pre < Option(pre) ||
+              (that.coreVersion.toVersion < CoreVersion(major, minor, patch).get.toVersion) &&
+              preBehaviour == Loose
           case _ if preBehaviour == Strict =>
             false
           case Major(major) =>
