@@ -202,6 +202,31 @@ class MatcherTest extends munit.ScalaCheckSuite {
       .reduce(_ && _)
   }
 
+  test("loose eq") {
+    val version = v"1.4.0-1"
+    val m1      = m"1.2.3 - 2.3.*"
+    val m2      = m">=1.2.3 <2.4.0-0"
+    val mm1     = m1.matches(version, PreReleaseBehaviour.Loose)
+    val mm2     = m2.matches(version, PreReleaseBehaviour.Loose)
+    assert(m">=1.2.3".matches(version, PreReleaseBehaviour.Loose))
+    assert(m"<2.4.0-0".matches(version, PreReleaseBehaviour.Loose))
+    assert(mm2, "decomposed range should match loosely")
+    assert(mm1, "hyphen range should not match loosely")
+  }
+
+  test("loose lte") {
+    val version = v"1.4.0-1"
+    val m1      = m"<=2.3.*"
+    assert(m1.matches(version, PreReleaseBehaviour.Loose))
+  }
+
+  test("loose lt") {
+    val m1  = m"<2.4.0-0"
+    val ver = v"1.4.0-1"
+    assert(m1.matches(ver, PreReleaseBehaviour.Loose))
+    assert(!m1.matches(ver, PreReleaseBehaviour.Strict))
+  }
+
   //If a partial version is provided as the second version in the inclusive range, then all versions that start with the supplied parts of the tuple are accepted, but nothing that would be greater than the provided tuple parts.
   //1.2.3 - 2.3 -> >=1.2.3 <2.4.0-0
   //1.2.3 - 2 := >=1.2.3 <3.0.0-0

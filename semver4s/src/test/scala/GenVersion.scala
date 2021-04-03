@@ -42,9 +42,9 @@ object GenVersion {
         d    <- deviations
       } yield {
         val rough = base + d
-          if (rough > max) base - math.abs(d)
-          else if (rough < max) base + math.abs(d)
-          else rough
+        if (rough > max) base - math.abs(d)
+        else if (rough < max) base + math.abs(d)
+        else rough
       }
       rough1.retryUntil(i => i >= min && i <= max)
     }
@@ -63,9 +63,9 @@ object GenVersion {
         d    <- deviations
       } yield {
         val rough = base + d
-          if (rough > max) base - math.abs(d)
-          else if (rough < max) base + math.abs(d)
-          else rough
+        if (rough > max) base - math.abs(d)
+        else if (rough < max) base + math.abs(d)
+        else rough
       }
       rough1.retryUntil(i => i >= min && i <= max)
     }
