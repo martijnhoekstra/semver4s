@@ -6,8 +6,8 @@ import cats.data.NonEmptyList
 
 object GenVersion {
 
-  val smallishLong = {
-    val unmaskBits = Gen.choose(0, 64)
+  def smallishLong(maxbits: Int = 64) = {
+    val unmaskBits = Gen.choose(0, maxbits)
     val masks      = unmaskBits.map(bits => ~(-1L << bits))
     for {
       mask <- masks
@@ -26,26 +26,27 @@ object GenVersion {
     } yield flip * (mask & num)
   }
 
-  val smallishNNLong = smallishLong.map(math.abs)
+  val smallishNNLong = smallishLong(33).map(math.abs)
   val smallishNNInt  = smallishInt(12).map(math.abs)
 
   def numBetween(min: Long, max: Long, specials: Long*): Gen[Long] = {
     require(min <= max)
     if (min == max) Gen.const(min)
     else {
-      val mid        = min + (max - min) / 2
-      val deviations = Gen.oneOf(Gen.const(0L), smallishLong)
-      for {
+      val dif        = max - min
+      val z          = Integer.numberOfLeadingZeros(dif.toInt)
+      val mid        = min + dif / 2
+      val deviations = smallishLong(64 - z)
+      val rough1 = for {
         base <- Gen.oneOf(min :: max :: mid :: specials.filter(x => x > min && x < max).toList)
         d    <- deviations
       } yield {
         val rough = base + d
-        val rough1 =
           if (rough > max) base - math.abs(d)
           else if (rough < max) base + math.abs(d)
           else rough
-        math.max(min, math.min(max, rough1))
       }
+      rough1.retryUntil(i => i >= min && i <= max)
     }
   }
 
@@ -53,19 +54,20 @@ object GenVersion {
     require(min <= max)
     if (min == max) Gen.const(min)
     else {
-      val mid        = min + (max - min) / 2
-      val deviations = Gen.oneOf(Gen.const(0), smallishInt())
-      for {
+      val dif        = max - min
+      val z          = Integer.numberOfLeadingZeros(dif)
+      val mid        = min + dif / 2
+      val deviations = smallishInt(32 - z)
+      val rough1 = for {
         base <- Gen.oneOf(min :: max :: mid :: specials.filter(x => x > min && x < max).toList)
         d    <- deviations
       } yield {
         val rough = base + d
-        val rough1 =
           if (rough > max) base - math.abs(d)
           else if (rough < max) base + math.abs(d)
           else rough
-        math.max(min, math.min(max, rough1))
       }
+      rough1.retryUntil(i => i >= min && i <= max)
     }
   }
 
