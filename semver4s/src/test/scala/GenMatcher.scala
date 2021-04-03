@@ -11,7 +11,12 @@ object GenMatcher {
     Gen.choose('A', 'Z'),
     Gen.choose('a', 'z')
   )
-  val genIdChar = Gen.oneOf(genNonNumIdChar, Gen.choose('0', '9'))
+  val genIdChar = Gen.oneOf(
+    Gen.const('-'),
+    Gen.choose('A', 'Z'),
+    Gen.choose('a', 'z'),
+    Gen.choose('0', '9')
+  )
 
   val genId = GenVersion.genPreId.map(_.fold(identity, _.toString()))
 

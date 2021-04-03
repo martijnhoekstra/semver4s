@@ -35,11 +35,17 @@ object GenVersion {
     else {
       val mid        = min + (max - min) / 2
       val deviations = Gen.oneOf(Gen.const(0L), smallishLong)
-      val rough = for {
-        base <- Gen.oneOf(min :: max :: mid :: specials.toList)
+      for {
+        base <- Gen.oneOf(min :: max :: mid :: specials.filter(x => x > min && x < max).toList)
         d    <- deviations
-      } yield base + d
-      rough.retryUntil(r => r >= min && r <= max)
+      } yield {
+        val rough = base + d
+        val rough1 =
+          if (rough > max) base - math.abs(d)
+          else if (rough < max) base + math.abs(d)
+          else rough
+        math.max(min, math.min(max, rough1))
+      }
     }
   }
 
@@ -50,11 +56,15 @@ object GenVersion {
       val mid        = min + (max - min) / 2
       val deviations = Gen.oneOf(Gen.const(0), smallishInt())
       for {
-        base <- Gen.oneOf(min :: max :: mid :: specials.toList)
+        base <- Gen.oneOf(min :: max :: mid :: specials.filter(x => x > min && x < max).toList)
         d    <- deviations
       } yield {
         val rough = base + d
-        math.max(min, math.min(max, rough))
+        val rough1 =
+          if (rough > max) base - math.abs(d)
+          else if (rough < max) base + math.abs(d)
+          else rough
+        math.max(min, math.min(max, rough1))
       }
     }
   }
