@@ -3,7 +3,7 @@ package semver4s
 import PreReleaseBehaviour._
 import org.scalacheck.Prop.forAll
 import Literal._
-
+import Shrinkers._
 class MatcherTest extends munit.ScalaCheckSuite {
 
   def areEquivalent(m1: Matcher, m2: Matcher) = forAll(GenVersion.genVersion) { v =>

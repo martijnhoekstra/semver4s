@@ -2,6 +2,7 @@ package semver4s
 
 import org.scalacheck.Prop.forAll
 import org.scalacheck.Shrink
+import Shrinkers._
 
 class NpmEquivalenceTest extends munit.ScalaCheckSuite {
   import semver4s.npm.NPMSemver
@@ -98,7 +99,7 @@ class NpmEquivalenceTest extends munit.ScalaCheckSuite {
   }
 
   property("Semver4s and NPM are consistent in what versions satisfy a primitive range") {
-    implicit def noShrink[A]: Shrink[A] = Shrink.shrinkAny
+    implicit val stringShrinker = shrinkMatcherString
     /*
     debug stuff for timings (hint: genMatcher is really slow. But why? todo: AsyncProfiler that shit)
     import java.time._
@@ -132,7 +133,7 @@ class NpmEquivalenceTest extends munit.ScalaCheckSuite {
   }
 
   property("Semver4s and NPM are consistent in what versions satisfy a tilde range") {
-    implicit def noShrink[A]: Shrink[A] = Shrink.shrinkAny
+    implicit val stringShrinker = shrinkMatcherString
     forAll(jsSafeTilde, jsSafeVersion)((rs, v) => {
       assertMatchEquiv(v.format, rs)
     })
@@ -153,7 +154,8 @@ class NpmEquivalenceTest extends munit.ScalaCheckSuite {
   /* this test is too damn slow
      I think it's the generators
   property("Semver4s and NPM are consistent in what versions satisfy a range") {
-    implicit def noShrink[A]: Shrink[A] = Shrink.shrinkAny
+    import Shrinkers._
+    implicit val stringShrinker = shrinkMatcherString
     forAll(jsSafeMatcher, jsSafeVersion)((rs, v) => {
       val m = parseMatcher(rs).toOption.get
       //semver4s allows a bit more. Particularly, semver4s allows any numeric version part up to long

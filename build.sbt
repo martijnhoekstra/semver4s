@@ -53,6 +53,7 @@ lazy val lib = projectMatrix
       "org.scala-lang" % "scala-reflect" % scalaVersion.value % "provided"
     )
       .filter(_ => scalaVersion.value.startsWith("2")),
+    scalacOptions --= List("-Xfatal-warnings").filter(_ => scalaVersion.value.startsWith("3")),
     publishTo := sonatypePublishToBundle.value,
     sonatypeProjectHosting := Some(
       GitHubHosting("martijnhoekstra", "semver4s", "martijnhoekstra@gmail.com")
