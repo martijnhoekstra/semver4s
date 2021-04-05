@@ -10,6 +10,15 @@ object SemVer {
 }
 
 object Version {
+  def apply(major: Long, minor: Long, patch: Long): Option[Version] =
+    if (major < 0 || minor < 0 || patch < 0) None
+    else if (major == 0 && minor == 0 && patch == 0) None
+    else Some(new Version(major, minor, patch, None, None) {})
+
+  def apply(major: Long, minor: Long, patch: Long, pre: SemVer.PreReleaseSuffix): Option[Version] =
+    if (major < 0 || minor < 0 || patch < 0) None
+    else if (major == 0 && minor == 0 && patch == 0) None
+    else Some(new Version(major, minor, patch, Some(pre), None) {})
 
   /** Construct a core version from major.minor.patch
     */

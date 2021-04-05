@@ -1,7 +1,8 @@
 package semver4s
 
 import org.scalacheck.Prop.forAll
-import org.scalacheck.Shrink
+import org.scalacheck.Gen
+import Shrinkers._
 
 class NpmEquivalenceTest extends munit.ScalaCheckSuite {
   import semver4s.npm.NPMSemver
@@ -22,13 +23,33 @@ class NpmEquivalenceTest extends munit.ScalaCheckSuite {
     case s: Matcher.Primitive     => isJsSafeVersion(s.p.version)
   }
 
-  val jsSafeVersion = genVersion.retryUntil(isJsSafeVersion)
-  val jsSafePrimitive =
-    genPrimitive.retryUntil(s => s.length <= 256 && parseMatcher(s).exists(isJsSafeMatcher))
-  val jsSafeTilde =
-    genTildeRange.retryUntil(s => s.length <= 256 && parseMatcher(s).exists(isJsSafeMatcher))
-  val jsSafeMatcher =
-    genRangeSet.retryUntil(s => s.length <= 256 && parseMatcher(s).exists(isJsSafeMatcher))
+  def cutToJsSafeLength(matcherString: String): Option[String] = {
+    val max = 256
+    if (matcherString.length <= max) Some(matcherString)
+    else {
+      val first = matcherString.indexOf(" || ")
+      if (first == -1 || first > max) None
+      else {
+        def loop(prev: Int): String = {
+          val next = matcherString.indexOf(" || ", prev)
+          if (next == -1 || next > max) matcherString.substring(0, prev)
+          else loop(next)
+        }
+        Some(loop(first))
+      }
+    }
+  }
+
+  def jsSafe(genMatcher: Gen[String]) = genMatcher
+    .map(cutToJsSafeLength)
+    .filterNot(_.isEmpty)
+    .map(_.get)
+    .retryUntil(s => s.length <= 256 && parseMatcher(s).exists(isJsSafeMatcher))
+
+  val jsSafeVersion   = genVersion.retryUntil(isJsSafeVersion)
+  val jsSafePrimitive = jsSafe(genPrimitive)
+  val jsSafeTilde     = jsSafe(genTildeRange)
+  val jsSafeMatcher   = jsSafe(genRangeSet)
 
   test("NPM semver satisfies works") {
     assert(NPMSemver.satisfies("1.2.3", "1.x"))
@@ -98,7 +119,7 @@ class NpmEquivalenceTest extends munit.ScalaCheckSuite {
   }
 
   property("Semver4s and NPM are consistent in what versions satisfy a primitive range") {
-    implicit def noShrink[A]: Shrink[A] = Shrink.shrinkAny
+    implicit val stringShrinker = shrinkMatcherString
     /*
     debug stuff for timings (hint: genMatcher is really slow. But why? todo: AsyncProfiler that shit)
     import java.time._
@@ -132,7 +153,7 @@ class NpmEquivalenceTest extends munit.ScalaCheckSuite {
   }
 
   property("Semver4s and NPM are consistent in what versions satisfy a tilde range") {
-    implicit def noShrink[A]: Shrink[A] = Shrink.shrinkAny
+    implicit val stringShrinker = shrinkMatcherString
     forAll(jsSafeTilde, jsSafeVersion)((rs, v) => {
       assertMatchEquiv(v.format, rs)
     })
@@ -151,9 +172,10 @@ class NpmEquivalenceTest extends munit.ScalaCheckSuite {
   }
 
   /* this test is too damn slow
-     I think it's the generators
+     I think it's the generators, and the retryUntil on versionRange string that has to be <255 chars
   property("Semver4s and NPM are consistent in what versions satisfy a range") {
-    implicit def noShrink[A]: Shrink[A] = Shrink.shrinkAny
+    import Shrinkers._
+    implicit val stringShrinker = shrinkMatcherString
     forAll(jsSafeMatcher, jsSafeVersion)((rs, v) => {
       val m = parseMatcher(rs).toOption.get
       //semver4s allows a bit more. Particularly, semver4s allows any numeric version part up to long
@@ -165,7 +187,6 @@ class NpmEquivalenceTest extends munit.ScalaCheckSuite {
                     else "npm matches, but semver4s doesn't"
       assertEquals(semver4sMatches, npmMatches, clue((rs, v.format, explain)))
     })
-  }
-   */
+  } */
 
 }
