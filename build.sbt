@@ -96,7 +96,7 @@ lazy val npmfacade = projectMatrix
     libraryDependencies ++= List(
       "org.scalameta"     %%% "munit"            % "0.7.23" % "test",
       "org.scalameta"     %%% "munit-scalacheck" % "0.7.23" % "test",
-      "io.github.cquiroz" %%% "scala-java-time"  % "2.2.0"  % "test"
+      "io.github.cquiroz" %%% "scala-java-time"  % "2.2.1"  % "test"
     )
   )
   .jsPlatform(
