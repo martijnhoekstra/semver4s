@@ -1,55 +1,12 @@
 package semver4s
 
 import org.scalacheck.Prop.forAll
-import org.scalacheck.Gen
-import Shrinkers._
+import semver4s.npm.NPMSemver
+import semver4s.JsSafeGenerators._
+import semver4s.Shrinkers._
+import semver4s.GenVersion._
 
 class NpmEquivalenceTest extends munit.ScalaCheckSuite {
-  import semver4s.npm.NPMSemver
-  import semver4s.GenMatcher._
-  import semver4s.GenVersion._
-
-  val maxSafeInt = 9007199254740991L
-
-  def isJsSafeVersion(v: Version) =
-    v.major <= maxSafeInt && v.minor <= maxSafeInt && v.patch <= maxSafeInt && v.format.length <= 256
-
-  def isJsSafeMatcher(m: Matcher): Boolean = m match {
-    case Matcher.And(simples)     => simples.forall(isJsSafeMatcher)
-    case Matcher.Or(ands)         => ands.forall(isJsSafeMatcher)
-    case Matcher.Hyphen(from, to) => isJsSafeVersion(from.version) && isJsSafeVersion(to.version)
-    case Matcher.Caret(base)      => isJsSafeVersion(base.version)
-    case Matcher.Tilde(base)      => isJsSafeVersion(base.version)
-    case s: Matcher.Primitive     => isJsSafeVersion(s.p.version)
-  }
-
-  def cutToJsSafeLength(matcherString: String): Option[String] = {
-    val max = 256
-    if (matcherString.length <= max) Some(matcherString)
-    else {
-      val first = matcherString.indexOf(" || ")
-      if (first == -1 || first > max) None
-      else {
-        def loop(prev: Int): String = {
-          val next = matcherString.indexOf(" || ", prev)
-          if (next == -1 || next > max) matcherString.substring(0, prev)
-          else loop(next)
-        }
-        Some(loop(first))
-      }
-    }
-  }
-
-  def jsSafe(genMatcher: Gen[String]) = genMatcher
-    .map(cutToJsSafeLength)
-    .filterNot(_.isEmpty)
-    .map(_.get)
-    .retryUntil(s => s.length <= 256 && parseMatcher(s).exists(isJsSafeMatcher))
-
-  val jsSafeVersion   = genVersion.retryUntil(isJsSafeVersion)
-  val jsSafePrimitive = jsSafe(genPrimitive)
-  val jsSafeTilde     = jsSafe(genTildeRange)
-  val jsSafeMatcher   = jsSafe(genRangeSet)
 
   test("NPM semver satisfies works") {
     assert(NPMSemver.satisfies("1.2.3", "1.x"))
@@ -170,23 +127,4 @@ class NpmEquivalenceTest extends munit.ScalaCheckSuite {
       assertEquals(ltnpm, lt4s, clue(s"${v1.format} < ${v2.format}? npm says $ltnpm, we say $lt4s"))
     })
   }
-
-  /* this test is too damn slow
-     I think it's the generators, and the retryUntil on versionRange string that has to be <255 chars
-  property("Semver4s and NPM are consistent in what versions satisfy a range") {
-    import Shrinkers._
-    implicit val stringShrinker = shrinkMatcherString
-    forAll(jsSafeMatcher, jsSafeVersion)((rs, v) => {
-      val m = parseMatcher(rs).toOption.get
-      //semver4s allows a bit more. Particularly, semver4s allows any numeric version part up to long
-      //npm requires <= MaxSafeInteger
-      val versionString = v.format
-      val semver4sMatches = m.matches(v)
-      val npmMatches = NPMSemver.satisfies(clue(versionString), clue(rs))
-      val explain = if (semver4sMatches) "semver4s matches, but npm doesn't"
-                    else "npm matches, but semver4s doesn't"
-      assertEquals(semver4sMatches, npmMatches, clue((rs, v.format, explain)))
-    })
-  } */
-
 }
