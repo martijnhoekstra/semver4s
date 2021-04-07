@@ -80,9 +80,9 @@ lazy val cli = projectMatrix
     )
   )
   .dependsOn(lib)
-  .jvmPlatform(scalaVersions = List(scala212Version, scala213Version))
+  .jvmPlatform(scalaVersions = List(scala213Version))
   .jsPlatform(
-    scalaVersions = List(scala212Version, scala213Version),
+    scalaVersions = List(scala213Version),
     settings =
       (scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.CommonJSModule) }) :: batchModeOnCI
   )
