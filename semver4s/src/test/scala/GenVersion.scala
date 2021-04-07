@@ -26,6 +26,13 @@ object GenVersion {
     } yield flip * (mask & num)
   }
 
+  def numBelow(bound: Int) = {
+    val z = Integer.numberOfLeadingZeros(bound)
+    smallishInt(32 - z).map(math.abs).map(x => if (x > bound) x % bound else x)
+  }
+
+  def smallBetween(min: Int, max: Int) = numBelow((max - min) + 1).map(_ + min)
+
   val smallishNNLong = smallishLong(33).map(math.abs)
   val smallishNNInt  = smallishInt(12).map(math.abs)
 
@@ -81,15 +88,17 @@ object GenVersion {
     } yield str.updated(i, ch)
 
     for {
-      len     <- numBetween(1, 255)
+      len     <- smallBetween(1, 255)
       attempt <- Gen.stringOfN(len, GenMatcher.genIdChar)
       fixed   <- if (attempt.forall(_.isDigit)) fixup(attempt) else Gen.const(attempt)
     } yield fixed.asLeft[Long]
   }
 
   val genPreId: Gen[SemVer.Identifier] = Gen.oneOf(genNumericId, genAlphaId)
-  val genPre: Gen[SemVer.PreReleaseSuffix] =
-    Gen.nonEmptyListOf(genPreId).map(NonEmptyList.fromListUnsafe)
+  val genPre: Gen[SemVer.PreReleaseSuffix] = for {
+    parts <- smallBetween(1, 5)
+    list  <- Gen.listOfN(parts, genPreId)
+  } yield NonEmptyList.fromListUnsafe(list)
 
   val genCoreVersion: Gen[CoreVersion] = for {
     major <- nonNegativeLong

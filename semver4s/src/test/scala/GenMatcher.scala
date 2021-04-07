@@ -69,5 +69,6 @@ object GenMatcher {
   }
 
   val genRangeSet = Gen.nonEmptyListOf(genRange).map(_.mkString(" || "))
+  val genMatcher  = genRangeSet.map(s => parseMatcher(s).toOption.get)
 
 }

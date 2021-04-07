@@ -21,7 +21,8 @@ import Bound._
   * - Disjunction (OR) ranges: e.g. any version in three any version in 1.2: 1.2 3 || 1.2.*
   */
 sealed trait Matcher extends Product with Serializable {
-  def format: String = Matcher.print(this)
+  override def toString = format
+  def format: String    = Matcher.print(this)
   def matches(that: Version): Boolean
   def matches(that: Version, pre: PreReleaseBehaviour): Boolean
 }

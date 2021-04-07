@@ -2,11 +2,11 @@ package semver4s
 
 import org.scalacheck.Prop.forAll
 import cats.syntax.all._
-import Shrinkers._
+//import Shrinkers._
 import Bound._
 
 class MatcherBoundsTest extends munit.ScalaCheckSuite {
-  
+
   property("versions not within bounds never match") {
     forAll(GenVersion.genVersion, GenMatcher.genMatcher) {
       case (version, matcher) => {

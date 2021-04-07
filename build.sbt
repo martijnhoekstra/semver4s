@@ -1,8 +1,11 @@
+import xerial.sbt.Sonatype._
+
 val dottyVersion    = "3.0.0-RC1"
 val scala213Version = "2.13.5"
 val scala212Version = "2.12.13"
 
-import xerial.sbt.Sonatype._
+Global / semanticdbEnabled := true
+Global / onChangedBuildSource := ReloadOnSourceChanges
 
 ThisBuild / testFrameworks += new TestFramework("munit.Framework")
 ThisBuild / scalaVersion := scala213Version
