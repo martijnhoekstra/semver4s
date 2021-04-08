@@ -1,11 +1,8 @@
-package semver4s
+package semver4s.gen
 
 import org.scalacheck.Gen
-import cats.syntax.all._
-import cats.data.NonEmptyList
 
-object GenVersion {
-
+object NumberGen {
   def smallishLong(maxbits: Int = 64) = {
     val unmaskBits = Gen.choose(0, maxbits)
     val masks      = unmaskBits.map(bits => ~(-1L << bits))
@@ -25,6 +22,13 @@ object GenVersion {
       flip <- Gen.oneOf(-1, 1)
     } yield flip * (mask & num)
   }
+
+  def numBelow(bound: Int) = {
+    val z = Integer.numberOfLeadingZeros(bound)
+    smallishInt(32 - z).map(math.abs).map(x => if (x > bound) x % bound else x)
+  }
+
+  def smallBetween(min: Int, max: Int) = numBelow((max - min) + 1).map(_ + min)
 
   val smallishNNLong = smallishLong(33).map(math.abs)
   val smallishNNInt  = smallishInt(12).map(math.abs)
@@ -73,35 +77,4 @@ object GenVersion {
 
   val nonNegativeLong = numBetween(0L, Long.MaxValue)
 
-  val genNumericId: Gen[SemVer.Identifier] = smallishNNLong.map(_.asRight[String])
-  val genAlphaId: Gen[SemVer.Identifier] = {
-    def fixup(str: String): Gen[String] = for {
-      i  <- numBetween(0, str.length - 1)
-      ch <- GenMatcher.genNonNumIdChar
-    } yield str.updated(i, ch)
-
-    for {
-      len     <- numBetween(1, 255)
-      attempt <- Gen.stringOfN(len, GenMatcher.genIdChar)
-      fixed   <- if (attempt.forall(_.isDigit)) fixup(attempt) else Gen.const(attempt)
-    } yield fixed.asLeft[Long]
-  }
-
-  val genPreId: Gen[SemVer.Identifier] = Gen.oneOf(genNumericId, genAlphaId)
-  val genPre: Gen[SemVer.PreReleaseSuffix] =
-    Gen.nonEmptyListOf(genPreId).map(NonEmptyList.fromListUnsafe)
-
-  val genCoreVersion: Gen[CoreVersion] = for {
-    major <- nonNegativeLong
-    minor <- nonNegativeLong
-    patch <- nonNegativeLong if (major, minor, patch) != ((0L, 0L, 0L))
-  } yield CoreVersion.unsafe(major, minor, patch)
-
-  val genVersion: Gen[Version] = for {
-    core @ CoreVersion(major, minor, patch) <- genCoreVersion
-    pre                                     <- Gen.option(genPre)
-  } yield {
-    val withPre = Version.unsafe(major, minor, patch, pre, None)
-    if (withPre.format.length > 300) core.toVersion else withPre
-  }
 }

@@ -6,7 +6,7 @@ import cats.syntax.all._
 
 import org.scalacheck.Prop.forAll
 
-import GenVersion._
+import gen.GenVersion._
 
 class OrderTest extends munit.ScalaCheckSuite {
   implicit val preReleaseOrder: Order[Option[SemVer.PreReleaseSuffix]] =

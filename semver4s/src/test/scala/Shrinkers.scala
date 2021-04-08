@@ -100,12 +100,11 @@ object Shrinkers {
     }
   }
 
-  def shrinkMatcherString: Shrink[String] =
-    Shrink[String](s =>
-      semver4s
-        .parseMatcher(s)
-        .fold(_ => Stream.empty, m => shrinkMatcher.shrink(m).map(_.format))
-    )
+  def shrinkMatcherString: Shrink[String] = Shrink[String](s =>
+    semver4s
+      .parseMatcher(s)
+      .fold(_ => Stream.empty, m => shrinkMatcher.shrink(m).map(_.format))
+  )
 
   def shrinkVersionString: Shrink[String] = Shrink[String](s =>
     semver4s

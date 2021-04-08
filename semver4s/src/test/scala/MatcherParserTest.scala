@@ -1,10 +1,10 @@
 package semver4s
 
 import org.scalacheck.Prop.forAll
+import gen.GenMatcher._
+import semver4s.parsing.MatcherParser
 
 class MatcherParserTest extends munit.ScalaCheckSuite {
-  import GenMatcher._
-  import semver4s.parsing.MatcherParser
 
   test("primitive range examples") {
     val comparators = List(">", "=", "<", ">=", "<=").map(_ + "1.2.3")

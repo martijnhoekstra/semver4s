@@ -2,9 +2,9 @@ package semver4s
 
 import org.scalacheck.Prop.forAll
 import semver4s.npm.NPMSemver
-import semver4s.JsSafeGenerators._
 import semver4s.Shrinkers._
-import semver4s.GenVersion._
+import semver4s.gen.JsSafeGenerators._
+import semver4s.gen.GenVersion._
 
 class NpmEquivalenceTest extends munit.ScalaCheckSuite {
 
@@ -127,4 +127,22 @@ class NpmEquivalenceTest extends munit.ScalaCheckSuite {
       assertEquals(ltnpm, lt4s, clue(s"${v1.format} < ${v2.format}? npm says $ltnpm, we say $lt4s"))
     })
   }
+
+  /* this test is problematic
+  property("Semver4s and NPM are consistent in what versions satisfy a range") {
+    implicit val stringShrinker = shrinkMatcherString
+    forAll(jsSafeMatcher, jsSafeVersion)((rs, v) => {
+      val m = parseMatcher(rs).toOption.get
+      //semver4s allows a bit more. Particularly, semver4s allows any numeric version part up to long
+      //npm requires <= MaxSafeInteger
+      val semver4sMatches = m.matches(v)
+      val npmMatches      = NPMSemver.satisfies(v.format, rs)
+      val explain =
+        if (semver4sMatches) "semver4s matches, but npm doesn't"
+        else if (npmMatches) "npm matches, but semver4s doesn't"
+        else "neither matches"
+      assertEquals(npmMatches, semver4sMatches, clue((rs, v.format, explain)))
+    })
+  }
+   */
 }

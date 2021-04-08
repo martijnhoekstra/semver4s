@@ -3,6 +3,7 @@ package semver4s
 import PreReleaseBehaviour._
 import org.scalacheck.Prop.forAll
 import Literal._
+import gen.GenVersion
 import Shrinkers._
 class MatcherTest extends munit.ScalaCheckSuite {
 
