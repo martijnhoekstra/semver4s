@@ -1,9 +1,10 @@
-package semver4s
+package semver4s.gen
 
 import org.scalacheck.Gen
+import NumberGen._
+import semver4s._
 
 object GenMatcher {
-  import GenVersion.nonNegativeLong
 
   val genOp = Gen.oneOf(">", "=", "<", ">=", "<=")
   val genNonNumIdChar = Gen.oneOf(
@@ -20,7 +21,10 @@ object GenMatcher {
 
   val genId = GenVersion.genPreId.map(_.fold(identity, _.toString()))
 
-  val genPre = Gen.nonEmptyListOf(genId).map(_.mkString("-", ".", ""))
+  val genPre = for {
+    len <- smallBetween(1, 10)
+    l   <- Gen.listOfN(len, genId)
+  } yield l.mkString("-", ".", "")
 
   val genPartial = {
     val wild = Gen.oneOf("", ".x", ".X", ".*")
@@ -41,7 +45,7 @@ object GenMatcher {
     } yield major.toString() + minorPart
   }
 
-  val genSemver =
+  val genSemver: Gen[String] =
     for {
       major <- nonNegativeLong
       minor <- nonNegativeLong
@@ -49,26 +53,33 @@ object GenMatcher {
       pre   <- Gen.oneOf(Gen.const(""), genPre)
     } yield s"$major.$minor.$patch$pre"
 
-  val genPrimitive = for {
+  val genPrimitive: Gen[String] = for {
     op  <- Gen.oneOf(">", "=", "<", ">=", "<=")
     ver <- genSemver
   } yield op + ver
 
-  val genHyphenRange = for {
+  val genHyphenRange: Gen[String] = for {
     from <- genPartial
     to   <- genPartial if from != "" && to != ""
   } yield s"$from - $to"
 
-  val genTildeRange = genPartial.map("~" + _)
-  val genCaretRange = genPartial.map("^" + _)
+  val genTildeRange: Gen[String] = genPartial.map("~" + _)
+  val genCaretRange: Gen[String] = genPartial.map("^" + _)
 
-  val genRange = {
+  val genRange: Gen[String] = {
     val nonHyphenRangePart = Gen.oneOf(genPartial, genPrimitive, genTildeRange, genCaretRange)
-    val nonHyphenRange     = Gen.nonEmptyListOf(nonHyphenRangePart).map(_.mkString(" "))
+    val nonHyphenRange = for {
+      n <- smallBetween(1, 10)
+      l <- Gen.listOfN(n, nonHyphenRangePart)
+    } yield l.mkString(" ")
     Gen.oneOf(genHyphenRange, nonHyphenRange)
   }
 
-  val genRangeSet = Gen.nonEmptyListOf(genRange).map(_.mkString(" || "))
-  val genMatcher  = genRangeSet.map(s => parseMatcher(s).toOption.get)
+  val genRangeSet: Gen[String] = for {
+    n <- smallBetween(1, 10)
+    l <- Gen.listOfN(n, genRange)
+  } yield l.mkString(" || ")
+
+  val genMatcher = genRangeSet.map(s => parseMatcher(s).toOption.get)
 
 }

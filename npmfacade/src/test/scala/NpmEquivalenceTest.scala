@@ -2,9 +2,9 @@ package semver4s
 
 import org.scalacheck.Prop.forAll
 import semver4s.npm.NPMSemver
-import semver4s.JsSafeGenerators._
 import semver4s.Shrinkers._
-import semver4s.GenVersion._
+import semver4s.gen.JsSafeGenerators._
+import semver4s.gen.GenVersion._
 
 class NpmEquivalenceTest extends munit.ScalaCheckSuite {
 

@@ -1,11 +1,12 @@
-package semver4s
+package semver4s.gen
 
 import cats.data.NonEmptyList
+import org.scalacheck.Gen
+import semver4s.gen.GenMatcher._
+import semver4s.gen.GenVersion._
+import semver4s._
 
 object JsSafeGenerators {
-  import org.scalacheck.Gen
-  import semver4s.GenMatcher._
-  import semver4s.GenVersion._
 
   val maxSafeInt = 9007199254740991L
 

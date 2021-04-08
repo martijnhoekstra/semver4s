@@ -2,6 +2,8 @@ package semver4s
 
 import org.scalacheck.Prop.forAll
 import cats.syntax.all._
+import semver4s.gen.GenMatcher
+import semver4s.gen.GenVersion
 //import Shrinkers._
 import Bound._
 
@@ -16,12 +18,12 @@ class MatcherBoundsTest extends munit.ScalaCheckSuite {
           case Inclusive(b) if version < b =>
             assert(
               !matcher.matches(version),
-              clue((matcher, version, "version matches below inclusive lower bound"))
+              clue(("version matches below inclusive lower bound", matcher, version))
             )
           case Exclusive(b) if version <= b =>
             assert(
               !matcher.matches(version),
-              clue((matcher, version, "version matches below or at exclusive lower bound"))
+              clue(("version matches below or at exclusive lower bound", matcher, version))
             )
           case _ => ()
         }
@@ -29,12 +31,12 @@ class MatcherBoundsTest extends munit.ScalaCheckSuite {
           case Inclusive(b) if version > b =>
             assert(
               !matcher.matches(version),
-              clue((matcher, version, "version matches above inclusive upper bound"))
+              clue(("version matches above inclusive upper bound", matcher, version))
             )
           case Exclusive(b) if version >= b =>
             assert(
               !matcher.matches(version),
-              clue((matcher, version, "version matches above or at exclusive upper bound"))
+              clue(("version matches above or at exclusive upper bound", matcher, version))
             )
           case _ => ()
         }

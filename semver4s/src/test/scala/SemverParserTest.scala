@@ -52,7 +52,7 @@ class SemverParserTest extends munit.ScalaCheckSuite {
   }
 
   property("valid semver version round-trips with parse") {
-    forAll(GenVersion.genVersion) { (v: Version) =>
+    forAll(gen.GenVersion.genVersion) { (v: Version) =>
       {
         val str   = v.format
         val parse = SemverParser.semver.parseAll(str)
