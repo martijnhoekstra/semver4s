@@ -80,7 +80,7 @@ object Matcher {
       p match {
         case Wild => true //~* kinda weird, but whatever
         case Major(Long.MaxValue) | Minor(Long.MaxValue, Long.MaxValue) |
-            Patch(Long.MaxValue, Long.MaxValue, _) =>
+            Patch(Long.MaxValue, Long.MaxValue, _) | Pre(Long.MaxValue, Long.MaxValue, _, _) =>
           lower.matches(that, preBehaviour)
         case m @ Major(_)       => (lower && lt(m.increment)).matches(that, preBehaviour) //same as ^
         case m @ Minor(_, _)    => (lower && lt(m.increment)).matches(that, preBehaviour)
