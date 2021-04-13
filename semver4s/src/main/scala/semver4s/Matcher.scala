@@ -52,7 +52,10 @@ object Matcher {
     def matches(that: Version, preBehaviour: PreReleaseBehaviour): Boolean = {
       val lower = gte(base)
       base match {
-        case Wild               => true //^* kinda weird, but whatever
+        case Wild => true //^* kinda weird, but whatever
+        case Major(Long.MaxValue) | Minor(Long.MaxValue, _) | Patch(Long.MaxValue, _, _) |
+            Pre(Long.MaxValue, _, _, _) =>
+          lower.matches(that, preBehaviour)
         case m @ Major(_)       => (lower && lt(m.increment)).matches(that, preBehaviour)
         case m @ Minor(0, _)    => (lower && lt(m.increment)).matches(that, preBehaviour)
         case m @ Minor(_, _)    => (lower && lt(m.incrementMajor)).matches(that, preBehaviour)
@@ -75,7 +78,10 @@ object Matcher {
     def matches(that: Version, preBehaviour: PreReleaseBehaviour): Boolean = {
       val lower = GTE(p)
       p match {
-        case Wild               => true                                                   //~* kinda weird, but whatever
+        case Wild => true //~* kinda weird, but whatever
+        case Major(Long.MaxValue) | Minor(Long.MaxValue, Long.MaxValue) |
+            Patch(Long.MaxValue, Long.MaxValue, _) =>
+          lower.matches(that, preBehaviour)
         case m @ Major(_)       => (lower && lt(m.increment)).matches(that, preBehaviour) //same as ^
         case m @ Minor(_, _)    => (lower && lt(m.increment)).matches(that, preBehaviour)
         case p @ Patch(_, _, _) => (lower && lt(p.incrementMinor)).matches(that, preBehaviour)
@@ -274,10 +280,15 @@ object Matcher {
     case Exact(p)         => Inclusive(p.version)
     case GT(p: Pre)       => Exclusive(p.version)
     case GT(Wild)         => Exclusive(Version.unsafe(0, 0, 0))
-    case GT(p)            => Inclusive(p.increment.version)
-    case GTE(p)           => Inclusive(p.version)
-    case LT(_)            => Inclusive(Version.unsafe(0, 0, 0))
-    case LTE(_)           => Inclusive(Version.unsafe(0, 0, 0))
+    case GT(p) =>
+      try {
+        Inclusive(p.increment.version)
+      } catch {
+        case _: ArithmeticException => Exclusive(p.version)
+      }
+    case GTE(p) => Inclusive(p.version)
+    case LT(_)  => Inclusive(Version.unsafe(0, 0, 0))
+    case LTE(_) => Inclusive(Version.unsafe(0, 0, 0))
   }
 
   /** The upper bound of the given matcher
@@ -285,15 +296,17 @@ object Matcher {
   def upperBound(m: Matcher): Bound = m match {
     case Hyphen(_, upper) =>
       upper match {
-        case Wild     => Unbounded
-        case m: Major => Exclusive(m.increment.version)
-        case m: Minor => Exclusive(m.increment.version)
-        case p: Patch => Inclusive(p.version)
-        case p: Pre   => Inclusive(p.version)
+        case Wild | Major(Long.MaxValue) | Minor(Long.MaxValue, Long.MaxValue) => Unbounded
+        case m: Major                                                          => Exclusive(m.increment.version)
+        case m: Minor                                                          => Exclusive(m.increment.version)
+        case p: Patch                                                          => Inclusive(p.version)
+        case p: Pre                                                            => Inclusive(p.version)
       }
     case Caret(part) =>
       part match {
-        case Wild               => Unbounded //^* kinda weird, but whatever
+        case Wild | Major(Long.MaxValue) | Minor(Long.MaxValue, Long.MaxValue) |
+            Patch(Long.MaxValue, Long.MaxValue, Long.MaxValue) =>
+          Unbounded //^* kinda weird, but whatever
         case m @ Major(_)       => Exclusive(m.increment.version)
         case m @ Minor(_, _)    => Exclusive(m.increment.version)
         case p @ Patch(0, 0, _) => Inclusive(p.version)
@@ -307,7 +320,9 @@ object Matcher {
       }
     case Tilde(part) =>
       part match {
-        case Wild                => Unbounded                           //~* kinda weird, but whatever
+        case Wild | Major(Long.MaxValue) | Minor(Long.MaxValue, Long.MaxValue) |
+            Patch(Long.MaxValue, Long.MaxValue, Long.MaxValue) =>
+          Unbounded //~* kinda weird, but whatever
         case m @ Major(_)        => Exclusive(m.increment.version)      //same as caret
         case m @ Minor(_, _)     => Exclusive(m.increment.version)      //in the glorious future
         case p @ Patch(_, _, _)  => Exclusive(p.incrementMinor.version) //binders should be

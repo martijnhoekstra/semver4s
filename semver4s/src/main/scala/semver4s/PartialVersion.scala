@@ -38,20 +38,30 @@ object Partial {
   }
 
   sealed abstract case class Major(major: Long) extends Partial {
-    def increment = unsafe(major + 1)
-    def version   = Version.unsafe(major, 0, 0)
+    def increment =
+      apply(major + 1).getOrElse(throw new ArithmeticException(s"overflow on major version"))
+    def version = Version.unsafe(major, 0, 0)
   }
   sealed abstract case class Minor(major: Long, minor: Long) extends Partial {
-    def incrementMajor = unsafe(major + 1)
-    def increment      = unsafe(major, minor + 1)
-    def version        = Version.unsafe(major, minor, 0)
+    def incrementMajor =
+      apply(major + 1).getOrElse(throw new ArithmeticException(s"overflow on major version"))
+    def increment = apply(major, minor + 1)
+      .orElse(apply(major + 1, 0))
+      .getOrElse(throw new ArithmeticException(s"overflow on major version"))
+    def version = Version.unsafe(major, minor, 0)
   }
 
   sealed abstract case class Patch(major: Long, minor: Long, patch: Long) extends Partial {
-    def incrementMajor = unsafe(major + 1)
-    def incrementMinor = unsafe(major, minor + 1)
-    def increment      = unsafe(major, minor, patch + 1)
-    def version        = Version.unsafe(major, minor, patch)
+    def incrementMajor =
+      apply(major + 1).getOrElse(throw new ArithmeticException(s"overflow on major version"))
+    def incrementMinor = apply(major, minor + 1)
+      .orElse(apply(major + 1, 0))
+      .getOrElse(throw new ArithmeticException(s"overflow on major version"))
+    def increment = apply(major, minor, patch + 1)
+      .orElse(apply(major, minor + 1, 0))
+      .orElse(apply(major + 1, 0, 0))
+      .getOrElse(throw new ArithmeticException(s"overflow on major version"))
+    def version = Version.unsafe(major, minor, patch)
   }
 
   sealed abstract case class Pre(
@@ -60,9 +70,15 @@ object Partial {
       patch: Long,
       pre: SemVer.PreReleaseSuffix
   ) extends Partial {
-    def incrementMajor = unsafe(major + 1)
-    def incrementMinor = unsafe(major, minor + 1)
-    def incrementPatch = unsafe(major, minor, patch + 1)
+    def incrementMajor =
+      apply(major + 1).getOrElse(throw new ArithmeticException(s"overflow on major version"))
+    def incrementMinor = apply(major, minor + 1)
+      .orElse(apply(major + 1, 0))
+      .getOrElse(throw new ArithmeticException(s"overflow on major version"))
+    def incrementPatch = apply(major, minor, patch + 1)
+      .orElse(apply(major, minor + 1, 0))
+      .orElse(apply(major + 1, 0, 0))
+      .getOrElse(throw new ArithmeticException(s"overflow on major version"))
     def increment = pre.last match {
       case Left(str) =>
         unsafe(major, minor, patch, NonEmptyList.fromListUnsafe(pre.init :+ Left(str + "-")))
