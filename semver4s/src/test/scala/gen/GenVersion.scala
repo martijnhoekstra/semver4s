@@ -41,4 +41,24 @@ object GenVersion {
     val withPre = Version.unsafe(major, minor, patch, pre, None)
     if (withPre.format.length > 300) core.toVersion else withPre
   }
+
+    val genPartial = {
+    val genMajor = smallishLong().map(l => Partial(l)).filter(_.nonEmpty).map(_.get)
+    val genMinor = (for {
+      maj <- smallishLong()
+      min <- smallishLong()
+    } yield Partial(maj, min)).filter(_.nonEmpty).map(_.get)
+    val genPatch = (for {
+      maj <- smallishLong()
+      min <- smallishLong()
+      pat <- smallishLong()
+    } yield Partial(maj, min, pat)).filter(_.nonEmpty).map(_.get)
+    val pre = (for {
+      maj <- smallishLong()
+      min <- smallishLong()
+      pat <- smallishLong()
+      pr  <- GenVersion.genPre
+    } yield Partial(maj, min, pat, pr)).filter(_.nonEmpty).map(_.get)
+    Gen.oneOf(Gen.const(Partial.Wild), genMajor, genMinor, genPatch, pre)
+  }
 }
