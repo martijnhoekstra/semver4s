@@ -80,6 +80,6 @@ object GenMatcher {
     l <- Gen.listOfN(n, genRange)
   } yield l.mkString(" || ")
 
-  val genMatcher = genRangeSet.map(s => parseMatcher(s).toOption.get)
+  val genMatcher = GenMatcher.genRangeSet.map(s => parseMatcher(s).toOption.get)
 
 }
