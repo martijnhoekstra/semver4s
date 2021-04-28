@@ -32,12 +32,14 @@ class PartialVersionTest extends munit.ScalaCheckSuite {
         val versionCore = Version(maj, min, pat)
         val coreVersion = CoreVersion(maj, min, pat)
 
-        if (maj == 0 && min == 0 && pat == 0)
+        if (maj == 0 && min == 0 && pat == 0) {
           assert(versionCore.isEmpty)
-        else
+          assert(coreVersion.isEmpty)
+        }
+        else {
           assertEquals(versionCore.map(_.coreVersion), coreVersion)
-
-        assertEquals(version.map(_.coreVersion), coreVersion)
+          assertEquals(version.map(_.coreVersion), coreVersion)
+        }
 
         val vmaj = Partial(maj)
         val vmin = Partial(maj, min)
