@@ -35,8 +35,7 @@ class PartialVersionTest extends munit.ScalaCheckSuite {
         if (maj == 0 && min == 0 && pat == 0) {
           assert(versionCore.isEmpty)
           assert(coreVersion.isEmpty)
-        }
-        else {
+        } else {
           assertEquals(versionCore.map(_.coreVersion), coreVersion)
           assertEquals(version.map(_.coreVersion), coreVersion)
         }
@@ -64,11 +63,19 @@ class PartialVersionTest extends munit.ScalaCheckSuite {
             assert(vpre.isEmpty)
           } else {
             assert(vmin.isDefined)
-            assertEquals(pat < 0, vpat.isEmpty)
-            assertEquals(pat < 0, vpre.isEmpty)
-            assertEquals(pat < 0, version.isEmpty)
-            assertEquals(pat < 0, versionCore.isEmpty)
-            assertEquals(pat < 0, coreVersion.isEmpty)
+            if (pat < 0) {
+              assert(vpat.isEmpty)
+              assert(vpre.isEmpty)
+              assert(version.isEmpty)
+              assert(versionCore.isEmpty)
+              assert(coreVersion.isEmpty)
+            } else if (pat > 0) {
+              assert(!vpat.isEmpty)
+              assert(!vpre.isEmpty)
+              assert(!version.isEmpty)
+              assert(!versionCore.isEmpty)
+              assert(!coreVersion.isEmpty)
+            }
           }
         }
       }

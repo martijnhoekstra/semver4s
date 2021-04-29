@@ -21,16 +21,19 @@ ThisBuild / developers := List(
   )
 )
 
-//attempt not to grind to a halt
+def onCI = sys.env.contains("CI")
+
+//attempt not to starve memory, but limitAll(1) is prone to deadlock
 ThisBuild / concurrentRestrictions ++= {
-  if (sys.env.contains("CI")) List(Tags.limitAll(1)) else Nil
+  if (onCI) List(Tags.limitAll(2)) else Nil
 }
 
 val batchModeOnCI =
-  if (sys.env.contains("CI")) List(scalaJSLinkerConfig ~= {
+  if (onCI) List(scalaJSLinkerConfig ~= {
     _.withBatchMode(true)
   })
   else Nil
+
 
 //a subproject "semver4s" gets automatically created
 //and aggregates all subprojects.
