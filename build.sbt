@@ -100,8 +100,8 @@ lazy val npmfacade = projectMatrix
     Test / npmDependencies += "semver" -> "7.3.4",
     publish / skip := true,
     libraryDependencies ++= List(
-      "org.scalameta"     %%% "munit"            % "0.7.23" % "test",
-      "org.scalameta"     %%% "munit-scalacheck" % "0.7.23" % "test",
+      "org.scalameta"     %%% "munit"            % "0.7.25" % "test",
+      "org.scalameta"     %%% "munit-scalacheck" % "0.7.25" % "test",
       "io.github.cquiroz" %%% "scala-java-time"  % "2.2.2"  % "test"
     )
   )
