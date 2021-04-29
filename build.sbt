@@ -21,16 +21,19 @@ ThisBuild / developers := List(
   )
 )
 
-//attempt not to grind to a halt
+def onCI = sys.env.contains("CI")
+
+//attempt not to starve memory, but limitAll(1) is prone to deadlock
 ThisBuild / concurrentRestrictions ++= {
-  if (sys.env.contains("CI")) List(Tags.limitAll(1)) else Nil
+  if (onCI) List(Tags.limitAll(2)) else Nil
 }
 
 val batchModeOnCI =
-  if (sys.env.contains("CI")) List(scalaJSLinkerConfig ~= {
+  if (onCI) List(scalaJSLinkerConfig ~= {
     _.withBatchMode(true)
   })
   else Nil
+
 
 //a subproject "semver4s" gets automatically created
 //and aggregates all subprojects.
@@ -97,9 +100,9 @@ lazy val npmfacade = projectMatrix
     Test / npmDependencies += "semver" -> "7.3.4",
     publish / skip := true,
     libraryDependencies ++= List(
-      "org.scalameta"     %%% "munit"            % "0.7.25" % "test",
-      "org.scalameta"     %%% "munit-scalacheck" % "0.7.25" % "test",
-      "io.github.cquiroz" %%% "scala-java-time"  % "2.2.1"  % "test"
+      "org.scalameta"     %%% "munit"            % "0.7.23" % "test",
+      "org.scalameta"     %%% "munit-scalacheck" % "0.7.23" % "test",
+      "io.github.cquiroz" %%% "scala-java-time"  % "2.2.2"  % "test"
     )
   )
   .jsPlatform(

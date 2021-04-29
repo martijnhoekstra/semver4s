@@ -90,7 +90,9 @@ sealed abstract case class CoreVersion(major: Long, minor: Long, patch: Long) {
 }
 
 object CoreVersion {
-  def apply(major: Long, minor: Long, patch: Long) = if (major >= 0 && minor >= 0 && patch >= 0)
+  def apply(major: Long, minor: Long, patch: Long) = if (
+    (major >= 0 && minor >= 0 && patch >= 0) && (major, minor, patch) != ((0, 0, 0))
+  )
     Some(new CoreVersion(major, minor, patch) {})
   else None
   def unsafe(major: Long, minor: Long, patch: Long) = new CoreVersion(major, minor, patch) {}
