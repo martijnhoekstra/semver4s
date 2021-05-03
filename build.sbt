@@ -37,7 +37,6 @@ val batchModeOnCI =
   })
   else Nil
 
-
 //a subproject "semver4s" gets automatically created
 //and aggregates all subprojects.
 //I don't think you can disable that project, only rename it
