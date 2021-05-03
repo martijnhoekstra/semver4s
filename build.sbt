@@ -21,6 +21,9 @@ ThisBuild / developers := List(
   )
 )
 
+//to start server with debugging in breakpoint:
+//ThisBuild / Test / jsEnv := new org.scalajs.jsenv.nodejs.NodeJSEnv(org.scalajs.jsenv.nodejs.NodeJSEnv.Config().withArgs(List("--inspect-brk")))
+
 def onCI = sys.env.contains("CI")
 
 //attempt not to starve memory, but limitAll(1) is prone to deadlock
@@ -106,7 +109,7 @@ lazy val npmfacade = projectMatrix
     )
   )
   .jsPlatform(
-    scalaVersions = List(dottyVersion, scala213Version),
+    scalaVersions = List(dottyVersion),
     settings =
       (scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.CommonJSModule) }) :: batchModeOnCI
   )
