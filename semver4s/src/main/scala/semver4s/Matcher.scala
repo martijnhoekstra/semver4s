@@ -272,7 +272,7 @@ object Matcher {
   /** The lower bound of the given matcher
     */
   def lowerBound(m: Matcher): Bound = m match {
-    case Hyphen(lower, _) => lowerBound(GT(lower))
+    case Hyphen(lower, _) => lowerBound(GTE(lower))
     case Caret(p)         => Inclusive(p.version)
     case Tilde(p)         => Inclusive(p.version)
     case And(simples)     => simples.map(lowerBound).reduceLeft(maxLower)

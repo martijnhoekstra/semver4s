@@ -70,7 +70,7 @@ sealed abstract case class Version(
     *
     * Two versions are compatible if they are identical, or if they have the same
     * major version and neither has a pre-release suffix
-    * 
+    *
     * @param that version to check compatibility with
     * @return `true` if this version should be compatible with that version.
     */
@@ -82,16 +82,16 @@ sealed abstract case class Version(
     * Two versions are compatible if they are identical, or if they have the same
     * major version and neither has a pre-release suffix, or they both have major version 0,
     * they have the same minor version and neither has a pre-release suffix
-    * 
+    *
     * @param that version to check compatibility with
     * @return `true` if this version should be compatible with that version.
     */
   def isEarlyCompatibleWith(that: Version): Boolean =
     earlyCompatibility.matches(that, PreReleaseBehaviour.Strict)
-  
+
   /** A matcher that matches exactly those version that according to Early SemVer
     * must be compatible with this version.
-    * 
+    *
     * Early SemVer differs from SemVer in that two versions with major version 0
     * must be compatible if their minor versions are equal.
     */
@@ -99,7 +99,7 @@ sealed abstract case class Version(
     if (pre.isDefined) Matcher.Exact(this.asPartial)
     else if (major == 0) Matcher.Exact(Partial.unsafe(0, minor))
     else Matcher.Exact(Partial.unsafe(major))
-  
+
   /** A matcher that matches exactly those versions that according to SemVer
     * must be compatible with this version.
     */
