@@ -53,7 +53,7 @@ lazy val lib = projectMatrix
     name := "semver4s",
     version := "0.4.0",
     libraryDependencies ++= List(
-      "org.typelevel" %%% "cats-parse"       % "0.3.2",
+      "org.typelevel" %%% "cats-parse"       % "0.3.3",
       "org.scalameta" %%% "munit"            % "0.7.25" % "test",
       "org.scalameta" %%% "munit-scalacheck" % "0.7.25" % "test"
     ),
