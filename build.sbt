@@ -54,8 +54,8 @@ lazy val lib = projectMatrix
     version := "0.4.0",
     libraryDependencies ++= List(
       "org.typelevel" %%% "cats-parse"       % "0.3.4",
-      "org.scalameta" %%% "munit"            % "0.7.25" % "test",
-      "org.scalameta" %%% "munit-scalacheck" % "0.7.25" % "test"
+      "org.scalameta" %%% "munit"            % "0.7.26" % "test",
+      "org.scalameta" %%% "munit-scalacheck" % "0.7.26" % "test"
     ),
     libraryDependencies ++= List(
       "org.scala-lang" % "scala-reflect" % scalaVersion.value % "provided"
@@ -102,8 +102,8 @@ lazy val npmfacade = projectMatrix
     Test / npmDependencies += "semver" -> "7.3.4",
     publish / skip := true,
     libraryDependencies ++= List(
-      "org.scalameta"     %%% "munit"            % "0.7.25" % "test",
-      "org.scalameta"     %%% "munit-scalacheck" % "0.7.25" % "test",
+      "org.scalameta"     %%% "munit"            % "0.7.26" % "test",
+      "org.scalameta"     %%% "munit-scalacheck" % "0.7.26" % "test",
       "io.github.cquiroz" %%% "scala-java-time"  % "2.3.0"  % "test"
     )
   )
