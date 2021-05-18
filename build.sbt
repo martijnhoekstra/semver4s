@@ -1,6 +1,6 @@
 import xerial.sbt.Sonatype._
 
-val dottyVersion    = "3.0.0-RC2"
+val dottyVersion    = "3.0.0"
 val scala213Version = "2.13.5"
 val scala212Version = "2.12.13"
 
@@ -53,7 +53,7 @@ lazy val lib = projectMatrix
     name := "semver4s",
     version := "0.4.0",
     libraryDependencies ++= List(
-      "org.typelevel" %%% "cats-parse"       % "0.3.3",
+      "org.typelevel" %%% "cats-parse"       % "0.3.4",
       "org.scalameta" %%% "munit"            % "0.7.25" % "test",
       "org.scalameta" %%% "munit-scalacheck" % "0.7.25" % "test"
     ),
@@ -104,7 +104,7 @@ lazy val npmfacade = projectMatrix
     libraryDependencies ++= List(
       "org.scalameta"     %%% "munit"            % "0.7.25" % "test",
       "org.scalameta"     %%% "munit-scalacheck" % "0.7.25" % "test",
-      "io.github.cquiroz" %%% "scala-java-time"  % "2.2.2"  % "test"
+      "io.github.cquiroz" %%% "scala-java-time"  % "2.3.0"  % "test"
     )
   )
   .jsPlatform(
