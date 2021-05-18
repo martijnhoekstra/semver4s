@@ -1,6 +1,6 @@
 import xerial.sbt.Sonatype._
 
-val dottyVersion    = "3.0.0-RC2"
+val dottyVersion    = "3.0.0"
 val scala213Version = "2.13.5"
 val scala212Version = "2.12.13"
 
