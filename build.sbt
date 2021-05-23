@@ -1,8 +1,10 @@
 import xerial.sbt.Sonatype._
 
-val dottyVersion    = "3.0.0"
+val scala3Version   = "3.0.0"
 val scala213Version = "2.13.5"
 val scala212Version = "2.12.13"
+
+val allScalaVersions = List(scala3Version, scala212Version, scala213Version)
 
 Global / semanticdbEnabled := true
 Global / onChangedBuildSource := ReloadOnSourceChanges
@@ -67,9 +69,9 @@ lazy val lib = projectMatrix
       GitHubHosting("martijnhoekstra", "semver4s", "martijnhoekstra@gmail.com")
     )
   )
-  .jvmPlatform(scalaVersions = List(dottyVersion, scala212Version, scala213Version))
+  .jvmPlatform(scalaVersions = allScalaVersions)
   .jsPlatform(
-    scalaVersions = List(dottyVersion, scala212Version, scala213Version),
+    scalaVersions = allScalaVersions,
     settings =
       (scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.CommonJSModule) }) :: batchModeOnCI
   )
@@ -108,7 +110,7 @@ lazy val npmfacade = projectMatrix
     )
   )
   .jsPlatform(
-    scalaVersions = List(dottyVersion),
+    scalaVersions = List(scala3Version),
     settings =
       (scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.CommonJSModule) }) :: batchModeOnCI
   )
