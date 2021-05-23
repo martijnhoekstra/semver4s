@@ -99,7 +99,7 @@ lazy val npmfacade = projectMatrix
     testFrameworks += new TestFramework("munit.Framework"),
     name := "npmFacade",
     version := "0.0.1",
-    Test / npmDependencies += "semver" -> "7.3.4",
+    Test / npmDependencies += "semver" -> "7.3.5",
     publish / skip := true,
     libraryDependencies ++= List(
       "org.scalameta"     %%% "munit"            % "0.7.26" % "test",
