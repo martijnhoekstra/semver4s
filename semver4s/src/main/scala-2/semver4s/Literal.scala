@@ -15,7 +15,7 @@ object Literal {
     import u._
     t match {
       case u.Literal(u.Constant(s: String)) =>
-        def r = new parsing.Reporter(s)
+        def r = new catsparse.reporting.Reporter(s)
         semver4s
           .parseVersion(s)
           .fold(
@@ -35,7 +35,7 @@ object Literal {
     import u._
     t match {
       case u.Literal(u.Constant(s: String)) =>
-        def r = new parsing.Reporter(s)
+        def r = new catsparse.reporting.Reporter(s)
         semver4s
           .parseMatcher(s)
           .fold(
