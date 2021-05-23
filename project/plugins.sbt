@@ -1,4 +1,4 @@
-addSbtPlugin("io.github.davidgregory084" % "sbt-tpolecat"        % "0.1.17")
+addSbtPlugin("io.github.davidgregory084" % "sbt-tpolecat"        % "0.1.18")
 addSbtPlugin("org.xerial.sbt"            % "sbt-sonatype"        % "3.9.7")
 addSbtPlugin("com.jsuereth"              % "sbt-pgp"             % "2.1.1")
 addSbtPlugin("com.eed3si9n"              % "sbt-projectmatrix"   % "0.8.0")
