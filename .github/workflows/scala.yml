@@ -20,7 +20,7 @@ jobs:
     - name: scoverage
       run: |
         sbt "project lib" clean coverage test coverageReport
-        sbt "project npmfacadeJS3" coverage test coverageReport
+        # sbt "project npmfacadeJS3" coverage test coverageReport
         sbt "project catsparsereporter" coverage test coverageReport
         sbt coverageAggregate 
     - name: upload coverage
