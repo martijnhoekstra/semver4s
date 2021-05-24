@@ -75,6 +75,7 @@ lazy val lib = projectMatrix
     settings =
       (scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.CommonJSModule) }) :: batchModeOnCI
   )
+  .dependsOn(catsparsereporter)
 
 lazy val cli = projectMatrix
   .in(file("cli"))
@@ -87,7 +88,10 @@ lazy val cli = projectMatrix
     )
   )
   .dependsOn(lib)
-  .jvmPlatform(scalaVersions = List(scala213Version))
+  .dependsOn(catsparsereporter)
+  .jvmPlatform(scalaVersions =
+    List(scala213Version)
+  ) //upgrade to scala 3 pending https://github.com/bkirwi/decline/issues/260
   .jsPlatform(
     scalaVersions = List(scala213Version),
     settings =
@@ -115,3 +119,24 @@ lazy val npmfacade = projectMatrix
       (scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.CommonJSModule) }) :: batchModeOnCI
   )
   .dependsOn(lib % "compile->compile;test->test")
+
+lazy val catsparsereporter = projectMatrix
+  .in(file("reporter"))
+  .settings(
+    testFrameworks += new TestFramework(
+      "munit.Framework"
+    ), //(why) is this needed since it's already in ThisBuild?
+    version := "0.1.0-SNAPSHOT",
+    name := "catsparsereporter",
+    libraryDependencies ++= List(
+      "org.typelevel" %%% "cats-parse"       % "0.3.4",
+      "org.scalameta" %%% "munit"            % "0.7.26" % "test",
+      "org.scalameta" %%% "munit-scalacheck" % "0.7.26" % "test"
+    )
+  )
+  .jvmPlatform(scalaVersions = allScalaVersions)
+  .jsPlatform(
+    scalaVersions = allScalaVersions,
+    settings =
+      (scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.CommonJSModule) }) :: batchModeOnCI
+  )
