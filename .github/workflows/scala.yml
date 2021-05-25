@@ -26,7 +26,7 @@ jobs:
     - name: upload coverage
       uses: codecov/codecov-action@v1
       with:
-        files: semver4s/target/jvm-2.13/scoverage-report/scoverage.xml
+        files: semver4s/target/scala-2.13/scoverage-report/scoverage.xml
     - name: compile
       run: |
         sbt --client clean
