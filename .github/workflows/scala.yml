@@ -17,12 +17,16 @@ jobs:
       uses: actions/setup-java@v1
       with:
         java-version: 11
-    - name: scoverage lib
-      run: sbt "project lib" clean coverage test coverageReport
+    - name: scoverage
+      run: |
+        sbt "project lib" clean coverage test coverageReport
+        # sbt "project npmfacadeJS3" coverage test coverageReport
+        sbt "project catsparsereporter" coverage test coverageReport
+        sbt coverageAggregate 
     - name: upload coverage
       uses: codecov/codecov-action@v1
       with:
-        files: semver4s/target/jvm-2.13/scoverage-report/scoverage.xml
+        files: semver4s/target/scala-2.13/scoverage-report/scoverage.xml
     - name: compile
       run: |
         sbt --client clean
