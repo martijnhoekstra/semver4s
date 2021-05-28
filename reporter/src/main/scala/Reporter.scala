@@ -3,7 +3,6 @@ package catsparse.reporting
 import cats.parse.Parser
 import cats.data.NonEmptyList
 import cats.parse.LocationMap
-import cats.parse.Parser.Expectation._
 
 /** A reporter for parse errors
   *
@@ -63,6 +62,7 @@ class Reporter(source: String) {
     * Length and FailWith.
     */
   def prettyExpectation(exp: Parser.Expectation): Option[String] = {
+    import Parser.Expectation.{OneOfStr, InRange, StartOfString, EndOfString, Length, FailWith}
     val pf: PartialFunction[Parser.Expectation, String] = {
       case OneOfStr(_, List(opt)) => s""""$opt""""
       case OneOfStr(_, options) =>
