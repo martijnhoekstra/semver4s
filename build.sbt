@@ -83,8 +83,8 @@ lazy val cli = projectMatrix
     name := "semver4s-cli",
     version := "1.0.2",
     libraryDependencies ++= List(
-      "com.monovore" %%% "decline"        % "2.0.0",
-      "com.monovore" %%% "decline-effect" % "2.0.0"
+      "com.monovore" %%% "decline"        % "2.1.0",
+      "com.monovore" %%% "decline-effect" % "2.1.0"
     )
   )
   .dependsOn(lib)
