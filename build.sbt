@@ -89,11 +89,9 @@ lazy val cli = projectMatrix
   )
   .dependsOn(lib)
   .dependsOn(catsparsereporter)
-  .jvmPlatform(scalaVersions =
-    List(scala213Version)
-  ) //upgrade to scala 3 pending https://github.com/bkirwi/decline/issues/260
+  .jvmPlatform(scalaVersions = List(scala3Version))
   .jsPlatform(
-    scalaVersions = List(scala213Version),
+    scalaVersions = List(scala3Version),
     settings =
       (scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.CommonJSModule) }) :: batchModeOnCI
   )
