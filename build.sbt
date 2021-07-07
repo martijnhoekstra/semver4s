@@ -83,17 +83,15 @@ lazy val cli = projectMatrix
     name := "semver4s-cli",
     version := "1.0.2",
     libraryDependencies ++= List(
-      "com.monovore" %%% "decline"        % "2.0.0",
-      "com.monovore" %%% "decline-effect" % "2.0.0"
+      "com.monovore" %%% "decline"        % "2.1.0",
+      "com.monovore" %%% "decline-effect" % "2.1.0"
     )
   )
   .dependsOn(lib)
   .dependsOn(catsparsereporter)
-  .jvmPlatform(scalaVersions =
-    List(scala213Version)
-  ) //upgrade to scala 3 pending https://github.com/bkirwi/decline/issues/260
+  .jvmPlatform(scalaVersions = List(scala3Version))
   .jsPlatform(
-    scalaVersions = List(scala213Version),
+    scalaVersions = List(scala3Version),
     settings =
       (scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.CommonJSModule) }) :: batchModeOnCI
   )

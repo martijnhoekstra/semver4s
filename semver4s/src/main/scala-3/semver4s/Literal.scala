@@ -1,6 +1,6 @@
 package semver4s
 
-import scala.quoted._
+import scala.quoted.*
 import cats.data.NonEmptyList
 
 object Literal:
@@ -23,7 +23,7 @@ object Literal:
         '{Version.unsafe(${Expr(maj)}, ${Expr(min)}, ${Expr(pat)}, ${Expr(pre)}, ${Expr(bld)})}
 
   given ToExpr[Matcher.Simple] with
-    import Matcher._
+    import Matcher.*
     def apply(m: Simple)(using Quotes): Expr[Simple] = m match
       case Hyphen(below, above) => '{Hyphen(${Expr(below)}, ${Expr(above)})}
       case Caret(p) => '{Caret(${Expr(p)})}
@@ -35,15 +35,15 @@ object Literal:
       case LTE(p) => '{LTE(${Expr(p)})}
 
   given ToExpr[Matcher.And] with
-    import Matcher._
+    import Matcher.*
     def apply(m: And)(using Quotes): Expr[And] = '{And(${Expr(m.simples)})}
 
   given ToExpr[Matcher.Or] with
-    import Matcher._
+    import Matcher.*
     def apply(m: Or)(using Quotes): Expr[Or] = '{Or(${Expr(m.ands)})}
 
   given ToExpr[Matcher] with
-    import Matcher._
+    import Matcher.*
     def apply(m: Matcher)(using Quotes): Expr[Matcher] = m match
       case s: Simple => Expr(s)
       case o: Or => Expr(o)
@@ -51,7 +51,7 @@ object Literal:
 
 
   given ToExpr[Partial] with
-    import Partial._
+    import Partial.*
     def apply(x: Partial)(using Quotes): Expr[Partial] = x match
       case Wild => '{Partial.Wild}
       case Major(m) => '{Partial.unsafe(${Expr(m)})}
@@ -71,8 +71,8 @@ object Literal:
 
   private def interpolatedVersionImpl(esc: Expr[StringContext])(using Quotes) = {
     val sc = esc.valueOrError
-    sc.parts match
-      case List(single: String) => versionImpl(Expr(single))
+    sc.parts.toList match
+      case List(single) => versionImpl(Expr(single))
       case _ =>
         quotes.reflect.report.error("version interpolator is not allowed to have any interpolated values")
         ???
@@ -80,8 +80,8 @@ object Literal:
 
   private def interpolatedMatcherImpl(esc: Expr[StringContext])(using Quotes) = {
     val sc = esc.valueOrError
-    sc.parts match
-      case List(single: String) => matcherImpl(Expr(single))
+    sc.parts.toList match
+      case List(single) => matcherImpl(Expr(single))
       case _ =>
         quotes.reflect.report.error("matcher interpolator is not allowed to have any interpolated values")
         ???
