@@ -42,7 +42,7 @@ object SemverApp
           case Exclusive(by) => by.format + " (exclusive)"
         }).pure[Option]
       case (r, Some(vs)) =>
-        vs.sorted.collectFirst {
+        vs.toList.sorted.collectFirst {
           case v if r.matches(v) => v.format
         }
     }
@@ -63,7 +63,7 @@ object SemverApp
           case Exclusive(v) => v.format + " (exclusive)"
         }).pure[Option]
       case (r, Some(vs)) =>
-        vs.sorted.reverse.collectFirst {
+        vs.toList.sorted.reverse.collectFirst {
           case v if r.matches(v) => v.format
         }
     }

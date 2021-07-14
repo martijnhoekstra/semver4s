@@ -49,20 +49,12 @@ val batchModeOnCI =
 //    publish / skip := true
 //  )
 
-lazy val lib = projectMatrix
-  .in(file("semver4s"))
+//core datatypes, no parsing, no cats
+lazy val core = projectMatrix
+  .in(file("core"))
   .settings(
-    name := "semver4s",
+    name := "semver4s-core",
     version := "0.4.0",
-    libraryDependencies ++= List(
-      "org.typelevel" %%% "cats-parse"       % "0.3.4",
-      "org.scalameta" %%% "munit"            % "0.7.27" % "test",
-      "org.scalameta" %%% "munit-scalacheck" % "0.7.27" % "test"
-    ),
-    libraryDependencies ++= List(
-      "org.scala-lang" % "scala-reflect" % scalaVersion.value % "provided"
-    )
-      .filter(_ => scalaVersion.value.startsWith("2")),
     scalacOptions --= List("-Xfatal-warnings").filter(_ => scalaVersion.value.startsWith("3")),
     publishTo := sonatypePublishToBundle.value,
     sonatypeProjectHosting := Some(
@@ -75,7 +67,32 @@ lazy val lib = projectMatrix
     settings =
       (scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.CommonJSModule) }) :: batchModeOnCI
   )
-  .dependsOn(catsparsereporter)
+
+//one-stop all-in-one lib, depends on cats and parsing
+lazy val lib = projectMatrix
+  .in(file("semver4s"))
+  .settings(
+    name := "semver4s",
+    version := "0.4.0",
+    libraryDependencies ++= List(
+      "org.scala-lang" % "scala-reflect" % scalaVersion.value % "provided"
+    )
+      .filter(_ => scalaVersion.value.startsWith("2")),
+    scalacOptions --= List("-Xfatal-warnings").filter(_ => scalaVersion.value.startsWith("3")),
+    publishTo := sonatypePublishToBundle.value,
+    sonatypeProjectHosting := Some(
+      GitHubHosting("martijnhoekstra", "semver4s", "martijnhoekstra@gmail.com")
+    )
+  )
+  .dependsOn(parser)
+  .dependsOn(core)
+  .jvmPlatform(scalaVersions = allScalaVersions)
+  .jsPlatform(
+    scalaVersions = allScalaVersions,
+    settings =
+      (scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.CommonJSModule) }) :: batchModeOnCI
+  )
+
 
 lazy val cli = projectMatrix
   .in(file("cli"))
@@ -88,7 +105,7 @@ lazy val cli = projectMatrix
     )
   )
   .dependsOn(lib)
-  .dependsOn(catsparsereporter)
+  .dependsOn(catsParseReporter)
   .jvmPlatform(scalaVersions = List(scala3Version))
   .jsPlatform(
     scalaVersions = List(scala3Version),
@@ -96,13 +113,26 @@ lazy val cli = projectMatrix
       (scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.CommonJSModule) }) :: batchModeOnCI
   )
 
-lazy val npmfacade = projectMatrix
-  .in(file("npmfacade"))
+lazy val parser = projectMatrix.in(file("parser"))
+  .settings(
+    name := "semver4s-parser",
+    version := "1.0.0",
+  )
+  .dependsOn(core)
+  .dependsOn(catsParseReporter)
+  .jvmPlatform(scalaVersions = allScalaVersions)
+  .jsPlatform(
+    scalaVersions = allScalaVersions,
+    settings =
+      (scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.CommonJSModule) }) :: batchModeOnCI
+  )
+
+lazy val npmEquivalence = projectMatrix
+  .in(file("npmEquivalence"))
   .enablePlugins(ScalaJSBundlerPlugin)
   .settings(
     testFrameworks += new TestFramework("munit.Framework"),
     name := "npmFacade",
-    version := "0.0.1",
     Test / npmDependencies += "semver" -> "7.3.5",
     publish / skip := true,
     libraryDependencies ++= List(
@@ -111,21 +141,42 @@ lazy val npmfacade = projectMatrix
       "io.github.cquiroz" %%% "scala-java-time"  % "2.3.0"  % "test"
     )
   )
+  .dependsOn(tests % "compile->compile;test->test")
   .jsPlatform(
     scalaVersions = List(scala3Version),
     settings =
       (scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.CommonJSModule) }) :: batchModeOnCI
   )
-  .dependsOn(lib % "compile->compile;test->test")
 
-lazy val catsparsereporter = projectMatrix
+
+lazy val tests = projectMatrix
+  .in(file("tests"))
+  .settings(
+    testFrameworks += new TestFramework("munit.Framework"),
+    name := "tests",
+    scalacOptions -= "-Xfatal-warnings",
+    publish / skip := true,
+    libraryDependencies ++= List(
+      "org.scalameta"     %%% "munit"            % "0.7.27" % "test",
+      "org.scalameta"     %%% "munit-scalacheck" % "0.7.27" % "test",
+      "io.github.cquiroz" %%% "scala-java-time"  % "2.3.0"  % "test"
+    )
+  )
+  .dependsOn(lib)
+  .jvmPlatform(scalaVersions = allScalaVersions)
+  .jsPlatform(
+    scalaVersions = allScalaVersions,
+    settings =
+      (scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.CommonJSModule) }) ::
+      batchModeOnCI
+  )
+
+lazy val catsParseReporter = projectMatrix
   .in(file("reporter"))
   .settings(
-    testFrameworks += new TestFramework(
-      "munit.Framework"
-    ), //(why) is this needed since it's already in ThisBuild?
+    testFrameworks += new TestFramework("munit.Framework"),
     version := "0.1.0-SNAPSHOT",
-    name := "catsparsereporter",
+    name := "catsParseReporter",
     libraryDependencies ++= List(
       "org.typelevel" %%% "cats-parse"       % "0.3.4",
       "org.scalameta" %%% "munit"            % "0.7.27" % "test",
