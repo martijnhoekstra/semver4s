@@ -1,12 +1,13 @@
-package semver4s
+package semver4s.catsparse
 
 import org.scalacheck.Prop.forAll
 import org.scalacheck.Gen
+import semver4s._
 
 class SemverParserTest extends munit.ScalaCheckSuite {
   import parsing.SemverParser
 
-  val genPreRelease = Gen.oneOf("-alpha", "-beta", "-alpha.1")
+  val genPreRelease = Gen.oneOf("-alpha", "-beta", "-alpha.1", "-1", "-alpha.-1")
   val genMetadata =
     Gen.oneOf("+001", "+20130313144700", "+exp.sha.5114f85", "+21AF26D3", "+21AF26D3--117B344092BD")
 

@@ -28,7 +28,7 @@ object Partial {
     condOpt(major -> minor -> patch -> pre) {
       case (((maj, min), pat), pre) if maj >= 0 && min >= 0 && pat >= 0 =>
         new Pre(major, minor, patch, pre) {}
-    }
+    }.filterNot(_ => pre.isEmpty)
 
   case object Wild extends Partial {
     def increment = Wild

@@ -1,8 +1,10 @@
-package semver4s
+package semver4s.catsparse
 
+import semver4s._
 import org.scalacheck.Prop.forAll
 import gen.GenMatcher._
 import semver4s.parsing.MatcherParser
+
 
 class MatcherParserTest extends munit.ScalaCheckSuite {
 

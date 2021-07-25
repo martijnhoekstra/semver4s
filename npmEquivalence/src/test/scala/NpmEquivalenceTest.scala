@@ -6,6 +6,7 @@ import semver4s.Shrinkers._
 import semver4s.gen.JsSafeGenerators._
 import semver4s.gen.GenVersion._
 import math.Ordering.Implicits.infixOrderingOps
+
 class NpmEquivalenceTest extends munit.ScalaCheckSuite:
 
   test("NPM semver satisfies works") {

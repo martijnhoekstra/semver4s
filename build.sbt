@@ -54,7 +54,7 @@ lazy val core = projectMatrix
   .in(file("core"))
   .settings(
     name := "semver4s-core",
-    version := "0.4.0",
+    version := "1.0.0",
     scalacOptions --= List("-Xfatal-warnings").filter(_ => scalaVersion.value.startsWith("3")),
     publishTo := sonatypePublishToBundle.value,
     sonatypeProjectHosting := Some(
@@ -73,7 +73,7 @@ lazy val lib = projectMatrix
   .in(file("semver4s"))
   .settings(
     name := "semver4s",
-    version := "0.4.0",
+    version := "2.0.0",
     libraryDependencies ++= List(
       "org.scala-lang" % "scala-reflect" % scalaVersion.value % "provided"
     )
@@ -84,7 +84,8 @@ lazy val lib = projectMatrix
       GitHubHosting("martijnhoekstra", "semver4s", "martijnhoekstra@gmail.com")
     )
   )
-  .dependsOn(parser)
+  .dependsOn(catsParse)
+  .dependsOn(catsParseReporter)
   .dependsOn(core)
   .jvmPlatform(scalaVersions = allScalaVersions)
   .jsPlatform(
@@ -113,13 +114,13 @@ lazy val cli = projectMatrix
       (scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.CommonJSModule) }) :: batchModeOnCI
   )
 
-lazy val parser = projectMatrix.in(file("parser"))
+lazy val catsParse = projectMatrix.in(file("catsParse"))
   .settings(
-    name := "semver4s-parser",
+    name := "semver4s-cats-parse",
     version := "1.0.0",
+    libraryDependencies ++= List("org.typelevel" %%% "cats-parse" % "0.3.4")
   )
   .dependsOn(core)
-  .dependsOn(catsParseReporter)
   .jvmPlatform(scalaVersions = allScalaVersions)
   .jsPlatform(
     scalaVersions = allScalaVersions,
@@ -131,7 +132,7 @@ lazy val npmEquivalence = projectMatrix
   .in(file("npmEquivalence"))
   .enablePlugins(ScalaJSBundlerPlugin)
   .settings(
-    testFrameworks += new TestFramework("munit.Framework"),
+    //testFrameworks += new TestFramework("munit.Framework"),
     name := "npmFacade",
     Test / npmDependencies += "semver" -> "7.3.5",
     publish / skip := true,
@@ -152,7 +153,7 @@ lazy val npmEquivalence = projectMatrix
 lazy val tests = projectMatrix
   .in(file("tests"))
   .settings(
-    testFrameworks += new TestFramework("munit.Framework"),
+    //testFrameworks += new TestFramework("munit.Framework"),
     name := "tests",
     scalacOptions -= "-Xfatal-warnings",
     publish / skip := true,
@@ -174,7 +175,7 @@ lazy val tests = projectMatrix
 lazy val catsParseReporter = projectMatrix
   .in(file("reporter"))
   .settings(
-    testFrameworks += new TestFramework("munit.Framework"),
+    //testFrameworks += new TestFramework("munit.Framework"),
     version := "0.1.0-SNAPSHOT",
     name := "catsParseReporter",
     libraryDependencies ++= List(
