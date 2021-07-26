@@ -11,7 +11,7 @@ object Shrinkers {
 
   implicit lazy val shrinkSuffix: Shrink[PreReleaseSuffix] = {
     implicit val shrinkString: Shrink[String] = Shrink.shrinkString.suchThat(str => !str.isEmpty())
-    implicit val shrinkLong: Shrink[Long]   = Shrink.shrinkIntegral[Long].suchThat(l => l >= 0)
+    implicit val shrinkLong: Shrink[Long]     = Shrink.shrinkIntegral[Long].suchThat(l => l >= 0)
     Shrink.shrinkContainer[List, Either[String, Long]]
   }
 

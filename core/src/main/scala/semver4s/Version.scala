@@ -12,7 +12,13 @@ object Version {
     else if (pre.isEmpty) None
     else Some(new Version(major, minor, patch, pre, None) {})
 
-  def apply(major: Long, minor: Long, patch: Long, pre: SemVer.PreReleaseSuffix, bld: String): Option[Version] =
+  def apply(
+      major: Long,
+      minor: Long,
+      patch: Long,
+      pre: SemVer.PreReleaseSuffix,
+      bld: String
+  ): Option[Version] =
     if (major < 0 || minor < 0 || patch < 0) None
     else if (major == 0 && minor == 0 && patch == 0) None
     else if (bld.isEmpty()) None
@@ -63,7 +69,8 @@ sealed abstract case class Version(
     case p   => Partial.unsafe(major, minor, patch, p)
   }
   def coreVersion = new CoreVersion(major, minor, patch) {}
-  def withBuild(build: String) = if (build.isEmpty) this else new Version(major, minor, patch, pre, Some(build)){}
+  def withBuild(build: String) =
+    if (build.isEmpty) this else new Version(major, minor, patch, pre, Some(build)) {}
 
   /** Checks if this version must be compatible with that version according to SemVer.
     *
@@ -134,7 +141,7 @@ sealed abstract case class Version(
 }
 
 sealed abstract case class CoreVersion(major: Long, minor: Long, patch: Long) {
-  def toVersion = Version.unsafe(major, minor, patch)
+  def toVersion                             = Version.unsafe(major, minor, patch)
   def withPre(pre: SemVer.PreReleaseSuffix) = Version.unsafe(major, minor, patch, pre)
 }
 

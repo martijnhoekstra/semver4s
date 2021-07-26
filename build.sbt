@@ -94,7 +94,6 @@ lazy val lib = projectMatrix
       (scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.CommonJSModule) }) :: batchModeOnCI
   )
 
-
 lazy val cli = projectMatrix
   .in(file("cli"))
   .settings(
@@ -114,7 +113,8 @@ lazy val cli = projectMatrix
       (scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.CommonJSModule) }) :: batchModeOnCI
   )
 
-lazy val catsParse = projectMatrix.in(file("catsParse"))
+lazy val catsParse = projectMatrix
+  .in(file("catsParse"))
   .settings(
     name := "semver4s-cats-parse",
     version := "1.0.0",
@@ -149,7 +149,6 @@ lazy val npmEquivalence = projectMatrix
       (scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.CommonJSModule) }) :: batchModeOnCI
   )
 
-
 lazy val tests = projectMatrix
   .in(file("tests"))
   .settings(
@@ -167,8 +166,7 @@ lazy val tests = projectMatrix
   .jvmPlatform(scalaVersions = allScalaVersions)
   .jsPlatform(
     scalaVersions = allScalaVersions,
-    settings =
-      (scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.CommonJSModule) }) ::
+    settings = (scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.CommonJSModule) }) ::
       batchModeOnCI
   )
 

@@ -39,7 +39,8 @@ object SharedParser {
       .map(ns => (ns, hasX))
   }
 
-  def parseLong(str: String): Either[String, Long] = scala.util.Try(str.toLong).toEither.left.map(ex => ex.getMessage())
+  def parseLong(str: String): Either[String, Long] =
+    scala.util.Try(str.toLong).toEither.left.map(ex => ex.getMessage())
 
   def parseVersionNoBuild(versionString: String): Either[String, VersionLike] =
     versionString.indexOf('-') match {

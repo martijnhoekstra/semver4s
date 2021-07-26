@@ -25,16 +25,18 @@ object MatcherParser {
     else if (str.startsWith("~")) parsePartial(str.substring(1)).map(Matcher.Tilde(_))
     else parsePartial(str).map(Matcher.Exact(_))
 
-  def parsePartial(str: String): Either[String, Partial] = parseVersionLike(str).flatMap(versionLikeToPartial)
+  def parsePartial(str: String): Either[String, Partial] =
+    parseVersionLike(str).flatMap(versionLikeToPartial)
 
   def versionLikeToPartial(vl: VersionLike): Either[String, Partial] = {
     val opt = vl match {
       case VersionLike(List(major, minor, patch), Nil, _, false) => Partial(major, minor, patch)
-      case VersionLike(List(major, minor, patch), pre, _, false) => Partial(major, minor, patch, pre)
+      case VersionLike(List(major, minor, patch), pre, _, false) =>
+        Partial(major, minor, patch, pre)
       case VersionLike(List(major, minor), Nil, None, _) => Partial(major, minor)
-      case VersionLike(List(major), Nil, None, _) => Partial(major)
-      case VersionLike(Nil, Nil, None, _) => Option(Partial.Wild)
-      case _ => None
+      case VersionLike(List(major), Nil, None, _)        => Partial(major)
+      case VersionLike(Nil, Nil, None, _)                => Option(Partial.Wild)
+      case _                                             => None
     }
     opt.fold[Either[String, Partial]](Left("invalid partial version format"))(Right(_))
   }

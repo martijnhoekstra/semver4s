@@ -9,7 +9,8 @@ class SemverCoreParserTest extends munit.ScalaCheckSuite {
   import coreparse.SemverParser
 
   val genPreReleaseExamples = Gen.oneOf("-alpha", "-beta", "-alpha.1", "-1", "-alpha.-1")
-  val genMetadataExamples = Gen.oneOf("+001", "+20130313144700", "+exp.sha.5114f85", "+21AF26D3", "+21AF26D3--117B344092BD")
+  val genMetadataExamples =
+    Gen.oneOf("+001", "+20130313144700", "+exp.sha.5114f85", "+21AF26D3", "+21AF26D3--117B344092BD")
 
   val genSemVer: Gen[String] = for {
     major         <- Gen.choose(0, 1000)
@@ -21,7 +22,7 @@ class SemverCoreParserTest extends munit.ScalaCheckSuite {
 
   test("Shared core version example") {
     val example = "298.549.1542"
-    val byCore = SharedParser.parseVersionNoPre(example)
+    val byCore  = SharedParser.parseVersionNoPre(example)
     assert(byCore.isRight)
     val Right((numbers, hasX)) = byCore
     assert(!hasX)
@@ -32,15 +33,18 @@ class SemverCoreParserTest extends munit.ScalaCheckSuite {
 
   test("example version") {
     val example = "298.549.1542-beta"
-    val byCore = SemverParser.parseVersion(example)
-    val byCats = semver4s.parsing.SemverParser.semver.parseAll(example)
+    val byCore  = SemverParser.parseVersion(example)
+    val byCats  = semver4s.parsing.SemverParser.semver.parseAll(example)
     assert(byCore.isRight)
     val Right(coreParsed) = byCore
     assertEquals(coreParsed.major, 298L)
     assertEquals(coreParsed.minor, 549L)
     assertEquals(coreParsed.patch, 1542L)
     assertEquals(coreParsed.pre, List(Left("beta")))
-    assert(byCore == byCats, s"example string result different between core and cats parser: $byCore, $byCats")
+    assert(
+      byCore == byCats,
+      s"example string result different between core and cats parser: $byCore, $byCats"
+    )
   }
 
   property("semver parses SemVer") {
@@ -63,7 +67,7 @@ class SemverCoreParserTest extends munit.ScalaCheckSuite {
     }
   }
 
-  test("bld without pre parses"){
+  test("bld without pre parses") {
     val Right(parsed) = SemverParser.parseVersion("835.86.4341+21AF26D3")
     assertEquals(parsed.build, Some("21AF26D3"))
   }
@@ -71,7 +75,7 @@ class SemverCoreParserTest extends munit.ScalaCheckSuite {
   property("valid semver version round-trips with parse") {
     forAll(gen.GenVersion.genVersion) { (v: Version) =>
       {
-        val str   = v.format
+        val str = v.format
         assertEquals(v.build.isDefined, str.contains('+'))
         val parse = SemverParser.parseVersion(str)
         assert(parse.isRight)

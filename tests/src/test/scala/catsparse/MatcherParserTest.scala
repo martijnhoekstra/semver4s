@@ -5,7 +5,6 @@ import org.scalacheck.Prop.forAll
 import gen.GenMatcher._
 import semver4s.parsing.MatcherParser
 
-
 class MatcherParserTest extends munit.ScalaCheckSuite {
 
   test("primitive range examples") {
