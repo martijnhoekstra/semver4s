@@ -9,14 +9,11 @@ import semver4s.SemVer._
 @nowarn("cat=deprecation")
 object Shrinkers {
 
-  def shrinkSuffix(s: PreReleaseSuffix): Stream[PreReleaseSuffix] = {
-    implicitly[Shrink[List[Either[String, Long]]]]
-      .shrink(s.toList)
-      .map(_.filterNot(_.fold(_ == "", _ <= 0)))
-      .filterNot(_.isEmpty)
+  implicit lazy val shrinkSuffix: Shrink[PreReleaseSuffix] = {
+    implicit val shrinkString: Shrink[String] = Shrink.shrinkString.suchThat(str => !str.isEmpty())
+    implicit val shrinkLong: Shrink[Long]   = Shrink.shrinkIntegral[Long].suchThat(l => l >= 0)
+    Shrink.shrinkContainer[List, Either[String, Long]]
   }
-
-  implicit val sSuffix: Shrink[PreReleaseSuffix] = Shrink(shrinkSuffix(_))
 
   implicit val shrinkVersion: Shrink[Version] = Shrink { case Version(maj, min, pat, pre, _) =>
     Version.unsafe(maj, min, pat, pre, None) #:: implicitly[Shrink[
@@ -35,14 +32,15 @@ object Shrinkers {
           case (0, 0, 0)          => shrinkMin(Partial.unsafe(maj, min))
           case (maj1, min1, pat1) => Partial(maj1, min1, pat1).toStream
         }
-
     }
+
     def shrinkMaj(maj: Major): Stream[Partial] =
       Shrink
         .shrinkIntegral[Long]
         .shrink(maj.major)
         .takeWhile(_ > 0)
         .map(Partial.unsafe(_)) #::: Stream(Wild)
+
     def shrinkMin(m: Minor): Stream[Partial] = m match {
       case Minor(0, x) =>
         Shrink.shrinkIntegral[Long].shrink(x).takeWhile(_ > 0).map(Partial.unsafe(0, _))
@@ -56,9 +54,9 @@ object Shrinkers {
     Shrink {
       case Pre(major, minor, patch, pre) => {
         val pat = Partial.unsafe(major, minor, patch)
-        shrinkSuffix(pre).map(p => Partial.unsafe(major, minor, patch, p)) #::: pat #:: shrinkPat(
-          pat
-        )
+        shrinkSuffix
+          .shrink(pre)
+          .map(p => Partial.unsafe(major, minor, patch, p)) #::: pat #:: shrinkPat(pat)
       }
       case patch: Patch => shrinkPat(patch)
       case min: Minor   => shrinkMin(min)
@@ -100,7 +98,10 @@ object Shrinkers {
   def shrinkMatcherString: Shrink[String] = Shrink[String](s =>
     semver4s
       .parseMatcher(s)
-      .fold(_ => Stream.empty, m => shrinkMatcher.shrink(m).map(_.format))
+      .fold(
+        _ => Stream.empty,
+        m => shrinkMatcher.shrink(m).map(_.format)
+      )
   )
 
   def shrinkVersionString: Shrink[String] = Shrink[String](s =>

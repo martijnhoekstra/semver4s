@@ -77,35 +77,8 @@ class NpmEquivalenceTest extends munit.ScalaCheckSuite:
 
   property("Semver4s and NPM are consistent in what versions satisfy a primitive range") {
     implicit val stringShrinker = shrinkMatcherString
-    /*
-    debug stuff for timings (hint: genMatcher is really slow. But why? todo: AsyncProfiler that shit)
-    import java.time._
-    var last = Instant.now()
-    val durations = new scala.collection.mutable.ListBuffer[(String, Duration, Duration)]()
-    def showTimings() = {
-      println("The timings!")
-      println("")
-      val ds = durations.toList
-      println("top by gen time:")
-      ds.sortBy{ case (_, _, d) => (d.getSeconds(), d.getNano)}.reverse.take(3).zipWithIndex.foreach {
-        case ((str, _, d), i) => println(s"(${i + 1}) $str: $d")
-      }
-      println("top by test time:")
-      ds.sortBy{ case (_, d, _) => (d.getSeconds(), d.getNano)}.reverse.take(3).zipWithIndex.foreach {
-        case ((str, d, _), i) => println(s"(${i + 1}) $str: $d")
-      }
-    }
-    var i = 0; */
     forAll(jsSafePrimitive, jsSafeVersion)((rs, v) => {
-      //val startTest = Instant.now()
       assertMatchEquiv(v.format, rs)
-      //val endTest = Instant.now()
-      //val testDuration = Duration.between(startTest, endTest)
-      //val genDuration = Duration.between(last, startTest)
-      //durations += ((rs, testDuration, genDuration))
-      //last = endTest
-      //i += 1
-      //if (i == 100) showTimings()
     })
   }
 
@@ -114,6 +87,16 @@ class NpmEquivalenceTest extends munit.ScalaCheckSuite:
     forAll(jsSafeTilde, jsSafeVersion)((rs, v) => {
       assertMatchEquiv(v.format, rs)
     })
+  }
+
+  test("Weird NPM behaviour that I don't think is to spec") {
+    var matcherString = "~9007199254740991.9007199254740991.9007199254740991-1";
+    var v =
+      Version.unsafe(9007199254740991L, 9007199254740991L, 9007199254740991L, List(Left("-")), None)
+    assert(!NPMSemver.satisfies(v.format, matcherString))
+    var matcherString1 = "~1.1.1-1";
+    var v1             = Version.unsafe(1, 1, 1, List(Left("-")), None)
+    assert(NPMSemver.satisfies(v1.format, matcherString1))
   }
 
   property("Semver4s and NPM are consistent in gt and lt comparison") {
@@ -128,7 +111,7 @@ class NpmEquivalenceTest extends munit.ScalaCheckSuite:
     })
   }
 
-  /* this test is problematic
+/* this test frequently exhausts retryUntil
   property("Semver4s and NPM are consistent in what versions satisfy a range") {
     implicit val stringShrinker = shrinkMatcherString
     forAll(jsSafeMatcher, jsSafeVersion)((rs, v) => {
@@ -138,10 +121,10 @@ class NpmEquivalenceTest extends munit.ScalaCheckSuite:
       val semver4sMatches = m.matches(v)
       val npmMatches      = NPMSemver.satisfies(v.format, rs)
       val explain =
-        if (semver4sMatches) "semver4s matches, but npm doesn't"
-        else if (npmMatches) "npm matches, but semver4s doesn't"
+        if semver4sMatches then "semver4s matches, but npm doesn't"
+        else if npmMatches then "npm matches, but semver4s doesn't"
         else "neither matches"
       assertEquals(npmMatches, semver4sMatches, clue((rs, v.format, explain)))
     })
   }
-   */
+ */

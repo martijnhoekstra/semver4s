@@ -8,7 +8,7 @@ import semver4s._
 
 object JsSafeGenerators:
 
-  val maxSafeInt = 9007199254740991L
+  val maxSafeInt = 9007199254740991L - 1
 
   def isJsSafeVersion(v: Version) =
     v.major <= maxSafeInt && v.minor <= maxSafeInt && v.patch <= maxSafeInt && v.format.length <= 256
@@ -35,8 +35,10 @@ object JsSafeGenerators:
     case _ => p
 
   def cutPreSuffixes(m: Matcher): Matcher = m match
-    case Matcher.And(simples) => Matcher.And(simples.take(3).map(cutPreSuffixes).asInstanceOf[List[Matcher.Simple]])
-    case Matcher.Or(ands) => Matcher.Or(ands.take(3).map(cutPreSuffixes).asInstanceOf[List[Matcher.And]])
+    case Matcher.And(simples) =>
+      Matcher.And(simples.take(3).map(cutPreSuffixes).asInstanceOf[List[Matcher.Simple]])
+    case Matcher.Or(ands) =>
+      Matcher.Or(ands.take(3).map(cutPreSuffixes).asInstanceOf[List[Matcher.And]])
     case Matcher.Hyphen(from, to) => Matcher.Hyphen(cutSuffix(from), cutSuffix(to))
     case Matcher.Caret(base)      => Matcher.Caret(cutSuffix(base))
     case Matcher.Tilde(base)      => Matcher.Tilde(cutSuffix(base))
@@ -83,7 +85,7 @@ object JsSafeGenerators:
         }
       )
 
-  def jsSafe(genMatcher: Gen[String]) = genMatcher
+  def jsSafe(genMatcher: Gen[String], maxTries: Int) = genMatcher
     .map(m => cutPreSuffixes(parseMatcher(m).toOption.get).format)
     .flatMap(x => {
       cutToJsSafeLength(x) match {
@@ -91,14 +93,14 @@ object JsSafeGenerators:
         case None    => Gen.fail
       }
     })
-    .retryUntil(s => s.length <= 256 && parseMatcher(s).exists(isJsSafeMatcher))
+    .retryUntil(s => s.length <= 256 && parseMatcher(s).exists(isJsSafeMatcher), maxTries)
 
   val jsSafeVersion = genVersion
     .map {
       case long if !isJsSafeVersion(long) => shorten(long)
       case safe                           => safe
     }
-    .retryUntil(isJsSafeVersion)
-  val jsSafePrimitive = jsSafe(genPrimitive)
-  val jsSafeTilde     = jsSafe(genTildeRange)
-  val jsSafeMatcher   = jsSafe(genRangeSet)
+    .retryUntil(isJsSafeVersion, 20)
+  val jsSafePrimitive = jsSafe(genPrimitive, 20)
+  val jsSafeTilde     = jsSafe(genTildeRange, 20)
+  val jsSafeMatcher   = jsSafe(genRangeSet, 20)
