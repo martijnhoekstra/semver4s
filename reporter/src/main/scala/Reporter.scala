@@ -7,17 +7,17 @@ import cats.parse.Parser.Expectation._
 
 /** A reporter for parse errors
   *
-  * Eagerly allocates a LocationMap, which may be expensive: in most cases,
-  * you want a def for a new reporter, and/or pass it as a by name argument.
+  * Eagerly allocates a LocationMap, which may be expensive: in most cases, you want a def for a new
+  * reporter, and/or pass it as a by name argument.
   */
 class Reporter(source: String) {
   val map = LocationMap(source)
 
   /** Gets an error report for the given parse error
     *
-    * The report consists of a non-empty list of lines describing the error,
-    * the first of which is the line on which the error occurred, and the second
-    * is a caret pointing to the error position in the line.
+    * The report consists of a non-empty list of lines describing the error, the first of which is
+    * the line on which the error occurred, and the second is a caret pointing to the error position
+    * in the line.
     *
     * Following lines indicate what expectations were violated.
     */
@@ -59,8 +59,8 @@ class Reporter(source: String) {
 
   /** Pretty-prints an expectation, if we know how to.
     *
-    * Pretty-printing is done for OneOfStr, InRange, StartOfString, EndOfString,
-    * Length and FailWith.
+    * Pretty-printing is done for OneOfStr, InRange, StartOfString, EndOfString, Length and
+    * FailWith.
     */
   def prettyExpectation(exp: Parser.Expectation): Option[String] = {
     val pf: PartialFunction[Parser.Expectation, String] = {
@@ -82,9 +82,8 @@ class Reporter(source: String) {
 
   /** Get a human-readable representation of some character.
     *
-    * If the character is an ASCII printable character, itself.
-    * Otherwise, include its name, Unicode codepoint, well-known escape sequence
-    * as applicable.
+    * If the character is an ASCII printable character, itself. Otherwise, include its name, Unicode
+    * codepoint, well-known escape sequence as applicable.
     */
   def charInfo(ch: Char): String = {
     val asU = "\\u" + ch.toInt.toHexString
@@ -107,7 +106,7 @@ class Reporter(source: String) {
     else if (Character.isLowSurrogate(ch)) s"low surrogate $asU"
     else if (Character.isHighSurrogate(ch)) s"high surrogate $asU"
     else {
-      val name = "uncommon character" // Character.getName(ch.toInt)
+      val name = "uncommon character" // Character.getName(ch.toInt) doesn't exist on JS
       if (Character.isLetterOrDigit(ch)) s"'$ch': $name, codepoint $asU"
       else if (Character.isWhitespace(ch)) s"whitespace character, codepoint $asU"
       else if (name.isEmpty) s"non-character $asU"
