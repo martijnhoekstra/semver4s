@@ -6,14 +6,14 @@ val scala212Version = "2.12.13"
 
 val allScalaVersions = List(scala3Version, scala212Version, scala213Version)
 
-Global / semanticdbEnabled := true
+Global / semanticdbEnabled    := true
 Global / onChangedBuildSource := ReloadOnSourceChanges
 
 ThisBuild / testFrameworks += new TestFramework("munit.Framework")
-ThisBuild / scalaVersion := scala213Version
+ThisBuild / scalaVersion  := scala213Version
 ThisBuild / versionScheme := Some("early-semver")
-ThisBuild / organization := "com.heroestools"
-ThisBuild / licenses := Seq("LGPLv3" -> url("https://www.gnu.org/licenses/lgpl-3.0.en.html"))
+ThisBuild / organization  := "com.heroestools"
+ThisBuild / licenses      := Seq("LGPLv3" -> url("https://www.gnu.org/licenses/lgpl-3.0.en.html"))
 ThisBuild / developers := List(
   Developer(
     id = "Martijn",
@@ -53,7 +53,7 @@ val batchModeOnCI =
 lazy val core = projectMatrix
   .in(file("core"))
   .settings(
-    name := "semver4s-core",
+    name    := "semver4s-core",
     version := "1.0.0",
     scalacOptions --= List("-Xfatal-warnings").filter(_ => scalaVersion.value.startsWith("3")),
     publishTo := sonatypePublishToBundle.value,
@@ -72,7 +72,7 @@ lazy val core = projectMatrix
 lazy val lib = projectMatrix
   .in(file("semver4s"))
   .settings(
-    name := "semver4s",
+    name    := "semver4s",
     version := "2.0.0",
     libraryDependencies ++= List(
       "org.scala-lang" % "scala-reflect" % scalaVersion.value % "provided"
@@ -97,7 +97,7 @@ lazy val lib = projectMatrix
 lazy val cli = projectMatrix
   .in(file("cli"))
   .settings(
-    name := "semver4s-cli",
+    name    := "semver4s-cli",
     version := "1.0.2",
     libraryDependencies ++= List(
       "com.monovore" %%% "decline"        % "2.1.0",
@@ -116,7 +116,7 @@ lazy val cli = projectMatrix
 lazy val catsParse = projectMatrix
   .in(file("catsParse"))
   .settings(
-    name := "semver4s-cats-parse",
+    name    := "semver4s-cats-parse",
     version := "1.0.0",
     libraryDependencies ++= List("org.typelevel" %%% "cats-parse" % "0.3.4")
   )
@@ -133,9 +133,9 @@ lazy val npmEquivalence = projectMatrix
   .enablePlugins(ScalaJSBundlerPlugin)
   .settings(
     //testFrameworks += new TestFramework("munit.Framework"),
-    name := "npmFacade",
+    name                               := "npmFacade",
     Test / npmDependencies += "semver" -> "7.3.5",
-    publish / skip := true,
+    publish / skip                     := true,
     libraryDependencies ++= List(
       "org.scalameta"     %%% "munit"            % "0.7.28" % "test",
       "org.scalameta"     %%% "munit-scalacheck" % "0.7.28" % "test",
@@ -175,7 +175,7 @@ lazy val catsParseReporter = projectMatrix
   .settings(
     //testFrameworks += new TestFramework("munit.Framework"),
     version := "0.1.0-SNAPSHOT",
-    name := "catsParseReporter",
+    name    := "catsParseReporter",
     libraryDependencies ++= List(
       "org.typelevel" %%% "cats-parse"       % "0.3.4",
       "org.scalameta" %%% "munit"            % "0.7.28" % "test",
