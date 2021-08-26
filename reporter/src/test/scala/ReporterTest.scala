@@ -30,14 +30,14 @@ class ReporterTest extends munit.ScalaCheckSuite {
     val teststring = "1.2/3"
     val caret      = "   ^"
 
-    val expectederrors = NonEmptyList.one("Expected character '.'")
+    val expectations = NonEmptyList.one("character '.'")
     val reporter       = new Reporter(teststring)
 
     semver.parseAll(teststring).swap.map(reporter.report(_)) match {
       case Right(NonEmptyList(rep @ ErrorReport(context, _, errors), Nil)) =>
         assertEquals(teststring, context)
         assertEquals(rep.caretLine, caret)
-        assertEquals(errors, expectederrors)
+        assertEquals(errors, expectations)
       case Right(_) => assert(false, "expected single location error")
       case Left(_)  => assert(false, "parse succeeded unexpectedly")
     }
