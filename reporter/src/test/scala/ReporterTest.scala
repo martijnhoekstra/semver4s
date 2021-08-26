@@ -83,7 +83,7 @@ class ReporterTest extends munit.ScalaCheckSuite {
     }
   }
 
-    test("semver example mid") {
+  test("semver example mid") {
     import cats.parse.SemVer._
 
     val contextWidth = 13
@@ -95,6 +95,44 @@ class ReporterTest extends munit.ScalaCheckSuite {
     val reporter       = new Reporter(teststring)
 
     semver.parseAll(teststring).swap.map(reporter.report(_, contextWidth)) match {
+      case Right(NonEmptyList(rep @ ErrorReport(context, _, errors), Nil)) =>
+        assertEquals(shownContext, context)
+        assertEquals(rep.caretLine, caret)
+        assertEquals(errors, expectederrors)
+      case Right(_) => assert(false, "expected single location error")
+      case Left(_)  => assert(false, "parse succeeded unexpectedly")
+    }
+  }
+
+  test("one of two") {
+    val p            = Parser.charIn('.', ',')
+    val teststring   = "xxxx"
+    val caret        = "^"
+    val shownContext = teststring
+
+    val expectederrors = NonEmptyList.of("Expected character ',' or", "character '.'")
+    val reporter       = new Reporter(teststring)
+
+    p.parseAll(teststring).swap.map(reporter.report(_)) match {
+      case Right(NonEmptyList(rep @ ErrorReport(context, _, errors), Nil)) =>
+        assertEquals(shownContext, context)
+        assertEquals(rep.caretLine, caret)
+        assertEquals(errors, expectederrors)
+      case Right(_) => assert(false, "expected single location error")
+      case Left(_)  => assert(false, "parse succeeded unexpectedly")
+    }
+  }
+
+  test("one of range") {
+    val p            = Parser.charIn('.', ',', '-')
+    val teststring   = "xxxx"
+    val caret        = "^"
+    val shownContext = teststring
+
+    val expectederrors = NonEmptyList.of("Expected a character between ',' and '.'")
+    val reporter       = new Reporter(teststring)
+
+    p.parseAll(teststring).swap.map(reporter.report(_)) match {
       case Right(NonEmptyList(rep @ ErrorReport(context, _, errors), Nil)) =>
         assertEquals(shownContext, context)
         assertEquals(rep.caretLine, caret)
