@@ -1,6 +1,8 @@
 package semver4s
 
 import org.scalacheck.Prop.forAll
+import semver4s.gen.GenVersion
+import semver4s.gen.GenMatcher
 import semver4s.gen.GenVersion._
 import scala.math.Ordering.Implicits._
 import scala.annotation.nowarn
@@ -36,6 +38,13 @@ class IncrementTest extends munit.ScalaCheckSuite {
       case pt @ Patch(MaxLong, _, _)             => overflows(pt.incrementMajor)
       case Wild                                  => assert(Wild.increment == Wild)
       case p                                     => assert(p.increment.version > p.version)
+    })
+  }
+
+  property("incremented partial versions match the same > as their original") {
+    forAll(GenVersion.genVersion, GenMatcher.genPartial)((v, p) => {
+      val matcher = parsing.MatcherParser.rangeSet.parseAll(s">$p").toOption.get
+      if (matcher.matches(v)) assert(matcher.matches(v.increment))
     })
   }
 

@@ -41,7 +41,7 @@ object GenVersion {
     if (withPre.format.length > 300) core.toVersion else withPre
   }
 
-  val genPartial = {
+  val genPartial: Gen[Partial] = {
     val genMajor = smallishLong().map(l => Partial(l)).filter(_.nonEmpty).map(_.get)
     val genMinor = (for {
       maj <- smallishLong()
