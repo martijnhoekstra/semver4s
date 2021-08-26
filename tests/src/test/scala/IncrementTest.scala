@@ -30,14 +30,17 @@ class IncrementTest extends munit.ScalaCheckSuite {
     import Partial._
     def overflows[T](body: => T) = intercept[ArithmeticException](body).void
     forAll(genPartial)({
-      case m @ Major(MaxLong)                    => overflows(m.increment)
-      case mn @ Minor(MaxLong, MaxLong)          => overflows(mn.increment)
-      case mn @ Minor(MaxLong, _)                => overflows(mn.incrementMajor)
-      case pt @ Patch(MaxLong, MaxLong, MaxLong) => overflows(pt.increment)
-      case pt @ Patch(MaxLong, MaxLong, _)       => overflows(pt.incrementMinor)
-      case pt @ Patch(MaxLong, _, _)             => overflows(pt.incrementMajor)
-      case Wild                                  => assert(Wild.increment == Wild)
-      case p                                     => assert(p.increment.version > p.version)
+      case m @ Major(MaxLong)                     => overflows(m.increment)
+      case mn @ Minor(MaxLong, MaxLong)           => overflows(mn.increment)
+      case mn @ Minor(MaxLong, _)                 => overflows(mn.incrementMajor)
+      case pt @ Patch(MaxLong, MaxLong, MaxLong)  => overflows(pt.increment)
+      case pt @ Patch(MaxLong, MaxLong, _)        => overflows(pt.incrementMinor)
+      case pt @ Patch(MaxLong, _, _)              => overflows(pt.incrementMajor)
+      case pr @ Pre(MaxLong, MaxLong, MaxLong, _) => overflows(pr.incrementPatch)
+      case pr @ Pre(MaxLong, MaxLong, _, _)       => overflows(pr.incrementMinor)
+      case pr @ Pre(MaxLong, _, _, _)             => overflows(pr.incrementMajor)
+      case Wild                                   => assert(Wild.increment == Wild)
+      case p                                      => assert(p.increment.version > p.version)
     })
   }
 
