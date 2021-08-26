@@ -44,6 +44,10 @@ class SemverCoreMatcherTest extends munit.ScalaCheckSuite {
   test("partial range examples") {
     coreEqCats("1")
     coreEqCats("1.2")
+    coreEqCats("1.2.3")
+    coreEqCats("1.2.3-a")
+    coreEqCats("1.2.3-0")
+    coreEqCats("1.2.3--0")
   }
 
   test("X range examples") {

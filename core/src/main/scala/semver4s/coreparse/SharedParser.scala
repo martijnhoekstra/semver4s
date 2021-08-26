@@ -15,7 +15,7 @@ object SharedParser {
   }
 
   def parsePrePart(prePart: String) = Try(prePart.toLong).toOption match {
-    case Some(l) if l > -1 => Right(Right(l))
+    case Some(l) if prePart.forall(_ == '0') || l >= 1 => Right(Right(l))
     case _ => {
       val badIndex =
         prePart.indexWhere(ch => !(ch.toInt < 255 && (ch.isLetter || ch.isDigit || ch == '-')))
