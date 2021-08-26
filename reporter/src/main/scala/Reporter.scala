@@ -43,17 +43,11 @@ class Reporter(source: String) {
       .map {
         case (offset, expectations) => {
           val printable = expectations.map(prettyExpectation)
-          val reasons: NonEmptyList[String] = printable match {
-            case NonEmptyList(head, (init :+ last)) =>
-              NonEmptyList(s"Expected $head", init).map(reason => s"$reason or") :::
-                NonEmptyList.one(last)
-            case NonEmptyList(head, _) => NonEmptyList.one(s"Expected $head")
-          }
           pointer(offset, width) match {
-            case Some((context, options)) => ErrorReport(context, options, reasons)
+            case Some((context, options)) => ErrorReport(context, options, printable)
             case None =>
               throw new IllegalArgumentException(
-                "bad offset for position. This is a cats-parse reporter bug"
+                "bad offset for position. Is the error from the same source as passed to the reporter?"
               )
           }
         }

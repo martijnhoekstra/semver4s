@@ -12,7 +12,7 @@ import cats.data.NonEmptyList
 case class ErrorReport(context: String, caretPosition: Int, messages: NonEmptyList[String]) {
   def caretLine = " " * caretPosition + "^"
   def messagesAsBlock(separator: String = "\n"): String = messages match {
-    case NonEmptyList(head, Nil) => head
-    case _ => messages.toList.mkString(s"any of the following:$separator", s"Or $separator", "")
+    case NonEmptyList(head, Nil) => s"Expected $head"
+    case _ => messages.toList.mkString(s"Expected any of the following:$separator", s" Or$separator", "")
   }
 }

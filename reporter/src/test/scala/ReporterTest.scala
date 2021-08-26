@@ -49,14 +49,15 @@ class ReporterTest extends munit.ScalaCheckSuite {
     val teststring = "1.2.3-pre???wrong"
     val caret      = "         ^"
 
-    val expectederrors = NonEmptyList.one("Expected the end of the string")
+    val expectederrors = "Expected the end of the string"
     val reporter       = new Reporter(teststring)
 
     semver.parseAll(teststring).swap.map(reporter.report(_)) match {
-      case Right(NonEmptyList(rep @ ErrorReport(context, _, errors), Nil)) =>
+      case Right(NonEmptyList(rep @ ErrorReport(context, _, _), Nil)) =>
         assertEquals(teststring, context)
         assertEquals(rep.caretLine, caret)
-        assertEquals(errors, expectederrors)
+        val messageBlock = rep.messagesAsBlock()
+        assertEquals(messageBlock, expectederrors)
       case Right(_) => assert(false, "expected single location error")
       case Left(_)  => assert(false, "parse succeeded unexpectedly")
     }
@@ -70,14 +71,14 @@ class ReporterTest extends munit.ScalaCheckSuite {
     val shownContext = "-pre?"
     val caret        = "    ^"
 
-    val expectederrors = NonEmptyList.one("Expected the end of the string")
+    val expectederrors = "Expected the end of the string"
     val reporter       = new Reporter(teststring)
 
     semver.parseAll(teststring).swap.map(reporter.report(_, contextWidth)) match {
-      case Right(NonEmptyList(rep @ ErrorReport(context, _, errors), Nil)) =>
+      case Right(NonEmptyList(rep @ ErrorReport(context, _, _), Nil)) =>
         assertEquals(shownContext, context)
         assertEquals(rep.caretLine, caret)
-        assertEquals(errors, expectederrors)
+        assertEquals(rep.messagesAsBlock(), expectederrors)
       case Right(_) => assert(false, "expected single location error")
       case Left(_)  => assert(false, "parse succeeded unexpectedly")
     }
@@ -91,14 +92,14 @@ class ReporterTest extends munit.ScalaCheckSuite {
     val shownContext = "1.2.3-pre???w"
     val caret        = "         ^"
 
-    val expectederrors = NonEmptyList.one("Expected the end of the string")
+    val expectederrors = "Expected the end of the string"
     val reporter       = new Reporter(teststring)
 
     semver.parseAll(teststring).swap.map(reporter.report(_, contextWidth)) match {
-      case Right(NonEmptyList(rep @ ErrorReport(context, _, errors), Nil)) =>
+      case Right(NonEmptyList(rep @ ErrorReport(context, _, _), Nil)) =>
         assertEquals(shownContext, context)
         assertEquals(rep.caretLine, caret)
-        assertEquals(errors, expectederrors)
+        assertEquals(rep.messagesAsBlock(), expectederrors)
       case Right(_) => assert(false, "expected single location error")
       case Left(_)  => assert(false, "parse succeeded unexpectedly")
     }
@@ -110,14 +111,16 @@ class ReporterTest extends munit.ScalaCheckSuite {
     val caret        = "^"
     val shownContext = teststring
 
-    val expectederrors = NonEmptyList.of("Expected character ',' or", "character '.'")
-    val reporter       = new Reporter(teststring)
+    val expectederrors = """|Expected any of the following:
+                            |character ',' Or
+                            |character '.'""".stripMargin
+    val reporter = new Reporter(teststring)
 
     p.parseAll(teststring).swap.map(reporter.report(_)) match {
-      case Right(NonEmptyList(rep @ ErrorReport(context, _, errors), Nil)) =>
+      case Right(NonEmptyList(rep @ ErrorReport(context, _, _), Nil)) =>
         assertEquals(shownContext, context)
         assertEquals(rep.caretLine, caret)
-        assertEquals(errors, expectederrors)
+        assertEquals(rep.messagesAsBlock(), expectederrors)
       case Right(_) => assert(false, "expected single location error")
       case Left(_)  => assert(false, "parse succeeded unexpectedly")
     }
@@ -129,14 +132,14 @@ class ReporterTest extends munit.ScalaCheckSuite {
     val caret        = "^"
     val shownContext = teststring
 
-    val expectederrors = NonEmptyList.of("Expected a character between ',' and '.'")
+    val expectederrors = "Expected a character between ',' and '.'"
     val reporter       = new Reporter(teststring)
 
     p.parseAll(teststring).swap.map(reporter.report(_)) match {
-      case Right(NonEmptyList(rep @ ErrorReport(context, _, errors), Nil)) =>
+      case Right(NonEmptyList(rep @ ErrorReport(context, _, _), Nil)) =>
         assertEquals(shownContext, context)
         assertEquals(rep.caretLine, caret)
-        assertEquals(errors, expectederrors)
+        assertEquals(rep.messagesAsBlock(), expectederrors)
       case Right(_) => assert(false, "expected single location error")
       case Left(_)  => assert(false, "parse succeeded unexpectedly")
     }
@@ -148,17 +151,18 @@ class ReporterTest extends munit.ScalaCheckSuite {
     val caret        = "^"
     val shownContext = teststring
 
-    val expectederrors = NonEmptyList.of(
-      "Expected a character between ',' and '.' or",
-      "character letter 'ሴ', codepoint \\u1234"
-    )
+    val uu = "u1234"
+    val expectederrors = s"""|Expected any of the following:
+                             |a character between ',' and '.' Or
+                             |character letter 'ሴ', codepoint \\$uu""".stripMargin
+
     val reporter = new Reporter(teststring)
 
     p.parseAll(teststring).swap.map(reporter.report(_)) match {
-      case Right(NonEmptyList(rep @ ErrorReport(context, _, errors), Nil)) =>
+      case Right(NonEmptyList(rep @ ErrorReport(context, _, _), Nil)) =>
         assertEquals(shownContext, context)
         assertEquals(rep.caretLine, caret)
-        assertEquals(errors, expectederrors)
+        assertEquals(rep.messagesAsBlock(), expectederrors)
       case Right(_) => assert(false, "expected single location error")
       case Left(_)  => assert(false, "parse succeeded unexpectedly")
     }
