@@ -55,7 +55,7 @@ object GenMatcher {
 
   val genPrimitive: Gen[String] = for {
     op  <- Gen.oneOf(">", "=", "<", ">=", "<=")
-    ver <- genSemver
+    ver <- genPartial
   } yield op + ver
 
   val genHyphenRange: Gen[String] = for {
