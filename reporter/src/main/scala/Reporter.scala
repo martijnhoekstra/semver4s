@@ -21,8 +21,8 @@ class Reporter(source: String) {
     *
     * Following lines indicate what expectations were violated.
     */
-  def report(error: Parser.Error): NonEmptyList[String] = {
-    def pointer(offset: Int, maxWidth: Int): List[String] = (for {
+  def report(error: Parser.Error, width: Int = 60): NonEmptyList[ErrorReport] = {
+    def pointer(offset: Int, maxWidth: Int): Option[(String, Int)] = for {
       (lineNumber, col) <- map.toLineCol(offset)
       line              <- map.getLine(lineNumber)
     } yield {
@@ -34,36 +34,38 @@ class Reporter(source: String) {
           col - leading
         }
       val lineSegment = line.drop(startIndex).take(maxWidth)
-      val p           = " " * (col - startIndex) + "^"
-      List(lineSegment, p)
-    }).getOrElse(Nil)
+      val p           = col - startIndex
+      (lineSegment, p)
+    }
 
     val errors = error.expected
       .groupBy(_.offset)
       .map {
         case (offset, expectations) => {
-          val printable = expectations.map(prettyExpectation).collect { case Some(text) => text }
-          val reasons = (printable: @unchecked) match {
-            case Nil         => Nil
-            case head :: Nil => List(s"Expected $head")
-            case head :: (init :+ last) =>
-              (s"Expected $head" :: init).map(reason => s"$reason or") ::: List(last)
+          val printable = expectations.map(prettyExpectation)
+          val reasons: NonEmptyList[String] = printable match {
+            case NonEmptyList(head, (init :+ last)) =>
+              NonEmptyList(s"Expected $head", init).map(reason => s"$reason or") :::
+                NonEmptyList.one(last)
+            case NonEmptyList(head, _) => NonEmptyList.one(s"Expected $head")
           }
-          pointer(offset, 60) ::: reasons
+          pointer(offset, width) match {
+            case Some((context, options)) => ErrorReport(context, options, reasons)
+            case None =>
+              throw new IllegalArgumentException(
+                "bad offset for position. This is a cats-parse reporter bug"
+              )
+          }
         }
       }
-      .flatten
 
     NonEmptyList.fromListUnsafe(errors.toList)
   }
 
-  /** Pretty-prints an expectation, if we know how to.
-    *
-    * Pretty-printing is done for OneOfStr, InRange, StartOfString, EndOfString, Length and
-    * FailWith.
+  /** Pretty-prints an expectation
     */
-  def prettyExpectation(exp: Parser.Expectation): Option[String] = {
-    val pf: PartialFunction[Parser.Expectation, String] = {
+  def prettyExpectation(exp: Parser.Expectation): String =
+    exp match {
       case OneOfStr(_, List(opt)) => s""""$opt""""
       case OneOfStr(_, options) =>
         s"one of the following: " + options.map(str => s""""$str"""").mkString(", ")
@@ -72,13 +74,14 @@ class Reporter(source: String) {
         s"character ${charInfo(lower)} or ${charInfo(upper)}}"
       case InRange(_, lower, upper) =>
         s"a character between ${charInfo(lower)} and ${charInfo(upper)}"
-      case StartOfString(_)            => "the start of input"
-      case EndOfString(_, _)           => "the end of the string"
-      case Length(_, expected, actual) => s"$expected remaining characters, but $actual found"
-      case FailWith(_, message)        => message
+      case StartOfString(_)             => "the start of input"
+      case EndOfString(_, _)            => "the end of the string"
+      case Length(_, expected, actual)  => s"$expected remaining characters, but $actual found"
+      case FailWith(_, message)         => message
+      case Fail(_)                      => "to fail"
+      case ExpectedFailureAt(_, _)      => "to fail"
+      case WithContext(context, expect) => s"${prettyExpectation(expect)} ($context)"
     }
-    pf.lift(exp)
-  }
 
   /** Get a human-readable representation of some character.
     *

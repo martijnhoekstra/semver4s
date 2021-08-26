@@ -4,24 +4,103 @@ package semver4s
 import org.scalacheck.Prop.forAll
 import org.scalacheck.Gen
 import cats.parse.Parser
+import cats.data.NonEmptyList
 
 class ReporterTest extends munit.ScalaCheckSuite {
 
-  property("caret points correctly") {
+  property("single caret points correctly") {
     val parser = Parser.char('o').rep0
     forAll(Gen.chooseNum(0, 200), Gen.chooseNum(0, 200))((prefix: Int, postfix: Int) => {
       val teststring = ("o" * prefix) + "x" + ("o" * postfix)
       val reporter   = new Reporter(teststring)
-      parser.parseAll(teststring).swap.map(reporter.report(_).toList) match {
-        case Right(context :: pointer :: _) =>
-          assertEquals(
-            context.indexOf("x"),
-            pointer.indexOf("^"),
-            clue((teststring, context, pointer))
-          )
-        case Right(_) => assert(false, "fewer than 2 lines in report")
+
+      parser.parseAll(teststring).swap.map(reporter.report(_)) match {
+        case Right(NonEmptyList(rep @ ErrorReport(context, pos, _), Nil)) =>
+          assertEquals(context.indexOf("x"), pos, clue((teststring, context, pos)))
+          assertEquals(rep.caretLine.indexOf("^"), pos, clue((teststring, context, pos)))
+        case Right(_) => assert(false, "expected single location error")
         case Left(_)  => assert(false, "parse succeeded unexpectedly")
       }
     })
+  }
+
+  test("semver example 1") {
+    import cats.parse.SemVer._
+
+    val teststring = "1.2/3"
+    val caret      = "   ^"
+
+    val expectederrors = NonEmptyList.one("Expected character '.'")
+    val reporter       = new Reporter(teststring)
+
+    semver.parseAll(teststring).swap.map(reporter.report(_)) match {
+      case Right(NonEmptyList(rep @ ErrorReport(context, _, errors), Nil)) =>
+        assertEquals(teststring, context)
+        assertEquals(rep.caretLine, caret)
+        assertEquals(errors, expectederrors)
+      case Right(_) => assert(false, "expected single location error")
+      case Left(_)  => assert(false, "parse succeeded unexpectedly")
+    }
+  }
+
+  test("semver example 2") {
+    import cats.parse.SemVer._
+
+    val teststring = "1.2.3-pre???wrong"
+    val caret      = "         ^"
+
+    val expectederrors = NonEmptyList.one("Expected the end of the string")
+    val reporter       = new Reporter(teststring)
+
+    semver.parseAll(teststring).swap.map(reporter.report(_)) match {
+      case Right(NonEmptyList(rep @ ErrorReport(context, _, errors), Nil)) =>
+        assertEquals(teststring, context)
+        assertEquals(rep.caretLine, caret)
+        assertEquals(errors, expectederrors)
+      case Right(_) => assert(false, "expected single location error")
+      case Left(_)  => assert(false, "parse succeeded unexpectedly")
+    }
+  }
+
+  test("semver example short") {
+    import cats.parse.SemVer._
+
+    val contextWidth = 5
+    val teststring   = "1.2.3-pre???wrong"
+    val shownContext = "-pre?"
+    val caret        = "    ^"
+
+    val expectederrors = NonEmptyList.one("Expected the end of the string")
+    val reporter       = new Reporter(teststring)
+
+    semver.parseAll(teststring).swap.map(reporter.report(_, contextWidth)) match {
+      case Right(NonEmptyList(rep @ ErrorReport(context, _, errors), Nil)) =>
+        assertEquals(shownContext, context)
+        assertEquals(rep.caretLine, caret)
+        assertEquals(errors, expectederrors)
+      case Right(_) => assert(false, "expected single location error")
+      case Left(_)  => assert(false, "parse succeeded unexpectedly")
+    }
+  }
+
+    test("semver example mid") {
+    import cats.parse.SemVer._
+
+    val contextWidth = 13
+    val teststring   = "1.2.3-pre???wrong"
+    val shownContext = "1.2.3-pre???w"
+    val caret        = "         ^"
+
+    val expectederrors = NonEmptyList.one("Expected the end of the string")
+    val reporter       = new Reporter(teststring)
+
+    semver.parseAll(teststring).swap.map(reporter.report(_, contextWidth)) match {
+      case Right(NonEmptyList(rep @ ErrorReport(context, _, errors), Nil)) =>
+        assertEquals(shownContext, context)
+        assertEquals(rep.caretLine, caret)
+        assertEquals(errors, expectederrors)
+      case Right(_) => assert(false, "expected single location error")
+      case Left(_)  => assert(false, "parse succeeded unexpectedly")
+    }
   }
 }
