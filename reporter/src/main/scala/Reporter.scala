@@ -109,13 +109,14 @@ class Reporter(source: String) {
     else if (Character.isLowSurrogate(ch)) s"low surrogate $asU"
     else if (Character.isHighSurrogate(ch)) s"high surrogate $asU"
     else {
-      val name = "uncommon character" // Character.getName(ch.toInt) doesn't exist on JS
-      if (Character.isLetterOrDigit(ch)) s"'$ch': $name, codepoint $asU"
+      //val name = Character.getName(ch.toInt) doesn't exist on JS
+      if (Character.isLetter(ch)) s"letter '$ch', codepoint $asU"
+      else if (Character.isLetterOrDigit(ch)) s"'$ch': codepoint $asU"
       else if (Character.isWhitespace(ch)) s"whitespace character, codepoint $asU"
-      else if (name.isEmpty) s"non-character $asU"
+      //else if (name.isEmpty) s"non-character $asU"
       else if (Character.isISOControl(ch)) s"control character $asU"
-      else if (printable.contains(Character.getType(ch).toByte)) s"'$ch': $name, codepoint $asU"
-      else s"$name, codepoint $asU"
+      else if (printable.contains(Character.getType(ch).toByte)) s"'$ch': codepoint $asU"
+      else s"codepoint $asU"
     }
   }
 

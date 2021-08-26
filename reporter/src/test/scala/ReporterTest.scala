@@ -141,4 +141,26 @@ class ReporterTest extends munit.ScalaCheckSuite {
       case Left(_)  => assert(false, "parse succeeded unexpectedly")
     }
   }
+
+  test("one of range plus one") {
+    val p            = Parser.charIn('.', ',', '-', '\u1234')
+    val teststring   = "xxxx"
+    val caret        = "^"
+    val shownContext = teststring
+
+    val expectederrors = NonEmptyList.of(
+      "Expected a character between ',' and '.' or",
+      "character letter 'ሴ', codepoint \\u1234"
+    )
+    val reporter = new Reporter(teststring)
+
+    p.parseAll(teststring).swap.map(reporter.report(_)) match {
+      case Right(NonEmptyList(rep @ ErrorReport(context, _, errors), Nil)) =>
+        assertEquals(shownContext, context)
+        assertEquals(rep.caretLine, caret)
+        assertEquals(errors, expectederrors)
+      case Right(_) => assert(false, "expected single location error")
+      case Left(_)  => assert(false, "parse succeeded unexpectedly")
+    }
+  }
 }
