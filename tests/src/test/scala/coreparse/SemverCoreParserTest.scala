@@ -8,7 +8,7 @@ import semver4s._
 class SemverCoreParserTest extends munit.ScalaCheckSuite {
   import coreparse.SemverParser
 
-  val genPreReleaseExamples = Gen.oneOf("-alpha", "-beta", "-alpha.1", "-1", "-alpha.-1")
+  val genPreReleaseExamples = Gen.oneOf("-alpha", "-beta", "-alpha.1", "-1", "-alpha.-1", "--0")
   val genMetadataExamples =
     Gen.oneOf("+001", "+20130313144700", "+exp.sha.5114f85", "+21AF26D3", "+21AF26D3--117B344092BD")
 
