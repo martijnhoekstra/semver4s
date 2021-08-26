@@ -88,6 +88,6 @@ object SemverApp
 abstract class ParserArgument[A](p: Parser0[A]) extends Argument[A] {
   def read(input: String) = {
     def reporter = new catsparse.reporting.Reporter(input)
-    p.parseAll(input).left.map(l => reporter.report(l).flatMap(errs => errs.messages)).toValidated
+    p.parseAll(input).left.map(l => reporter.report(l).flatMap(errs => errs.expectations)).toValidated
   }
 }
