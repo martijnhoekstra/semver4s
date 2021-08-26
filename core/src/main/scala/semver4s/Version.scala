@@ -1,5 +1,7 @@
 package semver4s
 
+import scala.util.Try
+
 object Version {
   def apply(major: Long, minor: Long, patch: Long): Option[Version] =
     if (major < 0 || minor < 0 || patch < 0) None
@@ -116,9 +118,15 @@ sealed abstract case class Version(
   def compatibility: Matcher =
     if (pre.nonEmpty || major == 0) Matcher.Exact(this.asPartial)
     else Matcher.Exact(Partial.unsafe(major))
-  def incrementMajor = Version.unsafe(major + 1, 0, 0)
-  def incrementMinor = Version.unsafe(major, minor + 1, 0)
-  def incrementPatch = Version.unsafe(major, minor, patch + 1)
+  def incrementMajor =
+    if (major == Long.MaxValue) throw new ArithmeticException("overflow in major version")
+    else Version.unsafe(major + 1, 0, 0)
+  def incrementMinor =
+    if (minor == Long.MaxValue) throw new ArithmeticException("overflow in minor version")
+    else Version.unsafe(major, minor + 1, 0)
+  def incrementPatch =
+    if (patch == Long.MaxValue) throw new ArithmeticException("overflow in patch version")
+    else Version.unsafe(major, minor, patch + 1)
   def increment = {
     def inc(suffix: SemVer.PreReleaseSuffix): SemVer.PreReleaseSuffix = suffix.reverse match {
       case Nil              => List(Left("-"))
@@ -126,7 +134,7 @@ sealed abstract case class Version(
       case Left(s) :: tail  => (Left(s + "-") :: tail).reverse
     }
     pre match {
-      case Nil    => incrementPatch
+      case Nil    => Try(incrementPatch).orElse(Try(incrementMinor)).orElse(Try(incrementMajor)).get
       case prefix => Version.unsafe(major, minor, patch, inc(prefix))
     }
   }

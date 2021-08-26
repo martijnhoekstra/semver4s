@@ -21,8 +21,8 @@ class Reporter(source: String) {
     *
     * Following lines indicate what expectations were violated.
     */
-  def report(error: Parser.Error): NonEmptyList[String] = {
-    def pointer(offset: Int, maxWidth: Int): List[String] = (for {
+  def report(error: Parser.Error, width: Int = 60): NonEmptyList[ErrorReport] = {
+    def pointer(offset: Int, maxWidth: Int): Option[(String, Int)] = for {
       (lineNumber, col) <- map.toLineCol(offset)
       line              <- map.getLine(lineNumber)
     } yield {
@@ -34,51 +34,48 @@ class Reporter(source: String) {
           col - leading
         }
       val lineSegment = line.drop(startIndex).take(maxWidth)
-      val p           = " " * (col - startIndex) + "^"
-      List(lineSegment, p)
-    }).getOrElse(Nil)
+      val p           = col - startIndex
+      (lineSegment, p)
+    }
 
     val errors = error.expected
       .groupBy(_.offset)
       .map {
         case (offset, expectations) => {
-          val printable = expectations.map(prettyExpectation).collect { case Some(text) => text }
-          val reasons = (printable: @unchecked) match {
-            case Nil         => Nil
-            case head :: Nil => List(s"Expected $head")
-            case head :: (init :+ last) =>
-              (s"Expected $head" :: init).map(reason => s"$reason or") ::: List(last)
+          val printable = expectations.map(prettyExpectation)
+          pointer(offset, width) match {
+            case Some((context, options)) => ErrorReport(context, options, printable)
+            case None =>
+              throw new IllegalArgumentException(
+                "bad offset for position. Is the error from the same source as passed to the reporter?"
+              )
           }
-          pointer(offset, 60) ::: reasons
         }
       }
-      .flatten
 
     NonEmptyList.fromListUnsafe(errors.toList)
   }
 
-  /** Pretty-prints an expectation, if we know how to.
-    *
-    * Pretty-printing is done for OneOfStr, InRange, StartOfString, EndOfString, Length and
-    * FailWith.
+  /** Pretty-prints an expectation
     */
-  def prettyExpectation(exp: Parser.Expectation): Option[String] = {
-    val pf: PartialFunction[Parser.Expectation, String] = {
+  def prettyExpectation(exp: Parser.Expectation): String =
+    exp match {
       case OneOfStr(_, List(opt)) => s""""$opt""""
       case OneOfStr(_, options) =>
         s"one of the following: " + options.map(str => s""""$str"""").mkString(", ")
       case InRange(_, lower, upper) if (lower == upper) => s"character ${charInfo(lower)}"
       case InRange(_, lower, upper) if (lower + 1 == upper) =>
-        s"character ${charInfo(lower)} or ${charInfo(upper)}}"
+        s"character ${charInfo(lower)} or ${charInfo(upper)}"
       case InRange(_, lower, upper) =>
         s"a character between ${charInfo(lower)} and ${charInfo(upper)}"
-      case StartOfString(_)            => "the start of input"
-      case EndOfString(_, _)           => "the end of the string"
-      case Length(_, expected, actual) => s"$expected remaining characters, but $actual found"
-      case FailWith(_, message)        => message
+      case StartOfString(_)             => "the start of input"
+      case EndOfString(_, _)            => "the end of the string"
+      case Length(_, expected, actual)  => s"$expected remaining characters, but $actual found"
+      case FailWith(_, message)         => message
+      case Fail(_)                      => "to fail"
+      case ExpectedFailureAt(_, _)      => "to fail"
+      case WithContext(context, expect) => s"${prettyExpectation(expect)} ($context)"
     }
-    pf.lift(exp)
-  }
 
   /** Get a human-readable representation of some character.
     *
@@ -106,13 +103,14 @@ class Reporter(source: String) {
     else if (Character.isLowSurrogate(ch)) s"low surrogate $asU"
     else if (Character.isHighSurrogate(ch)) s"high surrogate $asU"
     else {
-      val name = "uncommon character" // Character.getName(ch.toInt) doesn't exist on JS
-      if (Character.isLetterOrDigit(ch)) s"'$ch': $name, codepoint $asU"
+      //val name = Character.getName(ch.toInt) doesn't exist on JS
+      if (Character.isLetter(ch)) s"letter '$ch', codepoint $asU"
+      else if (Character.isLetterOrDigit(ch)) s"'$ch': codepoint $asU"
       else if (Character.isWhitespace(ch)) s"whitespace character, codepoint $asU"
-      else if (name.isEmpty) s"non-character $asU"
+      //else if (name.isEmpty) s"non-character $asU"
       else if (Character.isISOControl(ch)) s"control character $asU"
-      else if (printable.contains(Character.getType(ch).toByte)) s"'$ch': $name, codepoint $asU"
-      else s"$name, codepoint $asU"
+      else if (printable.contains(Character.getType(ch).toByte)) s"'$ch': codepoint $asU"
+      else s"codepoint $asU"
     }
   }
 
