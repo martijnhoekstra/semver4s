@@ -25,12 +25,19 @@ class ReporterTest extends munit.ScalaCheckSuite {
   }
 
   test("bad report") {
-    val reporter = new Reporter("different")
+    val reporter   = new Reporter("different")
     val teststring = "12345678901234567890"
+
     val p = Parser.length(20) *> Parser.char('x')
+
     def report = p.parseAll(teststring).swap.map(reporter.report(_))
+
     val ex = intercept[IllegalArgumentException](report)
-    assertEquals(ex.getMessage(), "bad offset for position. Is the error from the same source as passed to the reporter?")
+
+    assertEquals(
+      ex.getMessage(),
+      "bad offset for position. Is the error from the same source as passed to the reporter?"
+    )
   }
 
   test("semver example 1") {
@@ -40,7 +47,7 @@ class ReporterTest extends munit.ScalaCheckSuite {
     val caret      = "   ^"
 
     val expectations = NonEmptyList.one("character '.'")
-    val reporter       = new Reporter(teststring)
+    val reporter     = new Reporter(teststring)
 
     semver.parseAll(teststring).swap.map(reporter.report(_)) match {
       case Right(NonEmptyList(rep @ ErrorReport(context, _, errors), Nil)) =>
@@ -135,14 +142,14 @@ class ReporterTest extends munit.ScalaCheckSuite {
     }
   }
 
-    test("one of two consecutive") {
+  test("one of two consecutive") {
     val p            = Parser.charIn('.', '/')
     val teststring   = "xxxx"
     val caret        = "^"
     val shownContext = teststring
 
     val expectederrors = "Expected character '.' or '/'"
-    val reporter = new Reporter(teststring)
+    val reporter       = new Reporter(teststring)
 
     p.parseAll(teststring).swap.map(reporter.report(_)) match {
       case Right(NonEmptyList(rep @ ErrorReport(context, _, _), Nil)) =>
