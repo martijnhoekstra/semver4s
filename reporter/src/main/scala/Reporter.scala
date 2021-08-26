@@ -65,7 +65,7 @@ class Reporter(source: String) {
         s"one of the following: " + options.map(str => s""""$str"""").mkString(", ")
       case InRange(_, lower, upper) if (lower == upper) => s"character ${charInfo(lower)}"
       case InRange(_, lower, upper) if (lower + 1 == upper) =>
-        s"character ${charInfo(lower)} or ${charInfo(upper)}}"
+        s"character ${charInfo(lower)} or ${charInfo(upper)}"
       case InRange(_, lower, upper) =>
         s"a character between ${charInfo(lower)} and ${charInfo(upper)}"
       case StartOfString(_)             => "the start of input"

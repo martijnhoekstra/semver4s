@@ -135,6 +135,25 @@ class ReporterTest extends munit.ScalaCheckSuite {
     }
   }
 
+    test("one of two consecutive") {
+    val p            = Parser.charIn('.', '/')
+    val teststring   = "xxxx"
+    val caret        = "^"
+    val shownContext = teststring
+
+    val expectederrors = "Expected character '.' or '/'"
+    val reporter = new Reporter(teststring)
+
+    p.parseAll(teststring).swap.map(reporter.report(_)) match {
+      case Right(NonEmptyList(rep @ ErrorReport(context, _, _), Nil)) =>
+        assertEquals(shownContext, context)
+        assertEquals(rep.caretLine, caret)
+        assertEquals(rep.messagesAsBlock(), expectederrors)
+      case Right(_) => assert(false, "expected single location error")
+      case Left(_)  => assert(false, "parse succeeded unexpectedly")
+    }
+  }
+
   test("one of range") {
     val p            = Parser.charIn('.', ',', '-')
     val teststring   = "xxxx"
