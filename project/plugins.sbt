@@ -1,5 +1,5 @@
 addSbtPlugin("io.github.davidgregory084" % "sbt-tpolecat"        % "0.1.20")
-addSbtPlugin("org.xerial.sbt"            % "sbt-sonatype"        % "3.9.9")
+addSbtPlugin("org.xerial.sbt"            % "sbt-sonatype"        % "3.9.10")
 addSbtPlugin("com.jsuereth"              % "sbt-pgp"             % "2.1.1")
 addSbtPlugin("com.eed3si9n"              % "sbt-projectmatrix"   % "0.8.0")
 addSbtPlugin("org.scala-js"              % "sbt-scalajs"         % "1.7.0")
