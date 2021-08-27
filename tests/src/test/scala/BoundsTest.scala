@@ -62,8 +62,8 @@ class MatcherBoundsTest extends munit.ScalaCheckSuite {
             case Unbounded     => ()
           }
           upper match {
-            case Success(Exclusive(by)) => assert(version < by)
-            case Success(Inclusive(by)) => assert(version <= by)
+            case Success(Exclusive(by)) => assert(!(version >= by))
+            case Success(Inclusive(by)) => assert(!(version > by))
             case _                      => ()
           }
         }
