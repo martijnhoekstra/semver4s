@@ -9,13 +9,26 @@ import gen.GenMatcher._
 class SemverCoreMatcherTest extends munit.ScalaCheckSuite {
   import coreparse.MatcherParser
 
-  def coreEqCats(matcherString: String) = for {
-    core <- MatcherParser.parseMatcher(matcherString)
-    cats <- semver4s.parsing.MatcherParser.matcher.parseAll(matcherString)
-  } assertEquals(cats, core, matcherString)
+  def coreEqCats(matcherString: String) = {
+    val core = MatcherParser.parseMatcher(matcherString)
+    val cats = semver4s.parsing.MatcherParser.matcher.parseAll(matcherString)
+    (core, cats) match {
+      case (Right(cr), Right(ct)) => assertEquals(cr, ct)
+      case (Left(_), Left(_))     => () //error reporting may differ freely
+      case _ =>
+        if (core.isLeft) fail(s"core failed on matcher $matcherString")
+        else {
+          assert(cats.isLeft, "programming error in test")
+          fail(s"cats failed on matcher $matcherString")
+        }
+    }
+  }
 
   test("primitive range examples") {
-    val comparators = List(">", "=", "<", ">=", "<=").map(_ + "1.2.3")
+    val comparators = for {
+      cmp    <- List(">", "=", "<", ">=", "<=")
+      suffix <- List("1.2.3", "", "wat") //test both valid and invalid
+    } yield cmp + suffix
     comparators.foreach(coreEqCats)
   }
 
@@ -97,7 +110,7 @@ class SemverCoreMatcherTest extends munit.ScalaCheckSuite {
   }
 
   test("range examples") {
-    List(">=1.2.7 <1.3.0").foreach(coreEqCats)
+    List(">=1.2.7 <1.3.0", ">=1 <2").foreach(coreEqCats)
   }
 
   property("all ranges parse") {
