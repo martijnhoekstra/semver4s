@@ -26,10 +26,13 @@ class Reporter(source: String) {
       (lineNumber, col) <- map.toLineCol(offset)
       line              <- map.getLine(lineNumber)
     } yield {
+      //for pretty printing, if the whole line doesn't fit
+      //in the given width, we aim at having 75% of the line before the caret
+      //position, and the rest after, so that the caret is on 3/4 of the line
       val startIndex =
         if (line.length <= maxWidth) 0
         else {
-          val leadingTarget = (0.8 * maxWidth).toInt
+          val leadingTarget = (0.75 * maxWidth).toInt
           val leading       = math.min(col, leadingTarget)
           col - leading
         }

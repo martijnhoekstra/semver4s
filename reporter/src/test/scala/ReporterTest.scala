@@ -84,8 +84,8 @@ class ReporterTest extends munit.ScalaCheckSuite {
 
     val contextWidth = 5
     val teststring   = "1.2.3-pre???wrong"
-    val shownContext = "-pre?"
-    val caret        = "    ^"
+    val shownContext = "pre??"
+    val caret        = "   ^"
 
     val expectederrors = "Expected the end of the string"
     val reporter       = new Reporter(teststring)
