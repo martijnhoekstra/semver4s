@@ -47,4 +47,27 @@ class MatcherBoundsTest extends munit.ScalaCheckSuite {
       }
     }
   }
+
+  property("versions that match are within bounds") {
+    forAll(GenVersion.genVersion, GenMatcher.genMatcher) {
+      case (version, matcher) => {
+        val lower         = Matcher.lowerBound(matcher)
+        val upper         = Try(Matcher.upperBound(matcher))
+        val matchesLoose  = matcher.matches(version, PreReleaseBehaviour.Loose)
+        val matchesStrict = matcher.matches(version, PreReleaseBehaviour.Strict)
+        if (matchesLoose || matchesStrict) {
+          lower match {
+            case Exclusive(by) => assert(version > by)
+            case Inclusive(by) => assert(version >= by)
+            case Unbounded     => ()
+          }
+          upper match {
+            case Success(Exclusive(by)) => assert(version < by)
+            case Success(Inclusive(by)) => assert(version <= by)
+            case _                      => ()
+          }
+        }
+      }
+    }
+  }
 }

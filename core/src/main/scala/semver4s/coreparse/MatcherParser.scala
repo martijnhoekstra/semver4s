@@ -20,10 +20,20 @@ object MatcherParser {
       case _ => src.split(' ').toList.traverse(parseSimple).map(Matcher.And(_))
     }
 
-  def parseSimple(str: String) =
-    if (str.startsWith("^")) parsePartial(str.substring(1)).map(Matcher.Caret(_))
-    else if (str.startsWith("~")) parsePartial(str.substring(1)).map(Matcher.Tilde(_))
+  def parseSimple(str: String) = {
+    def withPartial(start: Int)(f: Partial => Matcher.Simple) =
+      if (str.length() >= start) parsePartial(str.substring(start)).map(f)
+      else Left(s"Unexpected end of string after ${str.take(start)}")
+
+    if (str.startsWith("^")) withPartial(1)(Matcher.Caret(_))
+    else if (str.startsWith("~")) withPartial(1)(Matcher.Tilde(_))
+    else if (str.startsWith("<=")) withPartial(2)(Matcher.lte)
+    else if (str.startsWith("<")) withPartial(1)(Matcher.lt)
+    else if (str.startsWith(">=")) withPartial(2)(Matcher.gte)
+    else if (str.startsWith(">")) withPartial(1)(Matcher.gt)
+    else if (str.startsWith("=")) withPartial(1)(Matcher.Exact(_))
     else parsePartial(str).map(Matcher.Exact(_))
+  }
 
   def parsePartial(str: String): Either[String, Partial] =
     parseVersionLike(str).flatMap(versionLikeToPartial)
