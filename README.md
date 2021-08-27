@@ -18,7 +18,14 @@ for {
 } yield matcher.matches(version)
 ```
 
-Support for literal versions and matchers with the `v` and `m` interpolator
+Short unsafe versions are available too, which are convenient for for example sbt files
+
+```scala
+import semver4s.unsafe._
+"1.2.3".satisfies(">=1.2 <2")
+```
+
+Support for literal versions and matchers with the `v` and `m` interpolator, checked at compile-time
 
 ```scala
 import semver4s.Literal._
@@ -27,3 +34,5 @@ m"~1.2".matches(v"1.2.3")
 ```
 
 Supports all npm version ranges as matchers
+
+Odds and end include getting upper and lower bounds for matchers and incrementing versions
