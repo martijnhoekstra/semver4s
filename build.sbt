@@ -137,8 +137,8 @@ lazy val npmEquivalence = projectMatrix
     Test / npmDependencies += "semver" -> "7.3.5",
     publish / skip                     := true,
     libraryDependencies ++= List(
-      "org.scalameta"     %%% "munit"            % "0.7.28" % "test",
-      "org.scalameta"     %%% "munit-scalacheck" % "0.7.28" % "test",
+      "org.scalameta"     %%% "munit"            % "0.7.29" % "test",
+      "org.scalameta"     %%% "munit-scalacheck" % "0.7.29" % "test",
       "io.github.cquiroz" %%% "scala-java-time"  % "2.3.0"  % "test"
     )
   )
@@ -157,8 +157,8 @@ lazy val tests = projectMatrix
     scalacOptions -= "-Xfatal-warnings",
     publish / skip := true,
     libraryDependencies ++= List(
-      "org.scalameta"     %%% "munit"            % "0.7.28" % "test",
-      "org.scalameta"     %%% "munit-scalacheck" % "0.7.28" % "test",
+      "org.scalameta"     %%% "munit"            % "0.7.29" % "test",
+      "org.scalameta"     %%% "munit-scalacheck" % "0.7.29" % "test",
       "io.github.cquiroz" %%% "scala-java-time"  % "2.3.0"  % "test"
     )
   )
@@ -178,8 +178,8 @@ lazy val catsParseReporter = projectMatrix
     name    := "catsParseReporter",
     libraryDependencies ++= List(
       "org.typelevel" %%% "cats-parse"       % "0.3.4",
-      "org.scalameta" %%% "munit"            % "0.7.28" % "test",
-      "org.scalameta" %%% "munit-scalacheck" % "0.7.28" % "test"
+      "org.scalameta" %%% "munit"            % "0.7.29" % "test",
+      "org.scalameta" %%% "munit-scalacheck" % "0.7.29" % "test"
     )
   )
   .jvmPlatform(scalaVersions = allScalaVersions)
