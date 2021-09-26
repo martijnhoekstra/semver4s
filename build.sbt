@@ -1,8 +1,8 @@
 import xerial.sbt.Sonatype._
 
 val scala3Version   = "3.0.2"
-val scala213Version = "2.13.6"
-val scala212Version = "2.12.13"
+val scala213Version = "2.13.5"
+val scala212Version = "2.12.15"
 
 val allScalaVersions = List(scala3Version, scala212Version, scala213Version)
 
@@ -100,8 +100,8 @@ lazy val cli = projectMatrix
     name    := "semver4s-cli",
     version := "1.0.2",
     libraryDependencies ++= List(
-      "com.monovore" %%% "decline"        % "2.1.0",
-      "com.monovore" %%% "decline-effect" % "2.1.0"
+      "com.monovore" %%% "decline"        % "2.2.0",
+      "com.monovore" %%% "decline-effect" % "2.2.0"
     )
   )
   .dependsOn(lib)
