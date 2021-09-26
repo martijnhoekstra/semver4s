@@ -26,7 +26,7 @@ class SemverCoreMatcherTest extends munit.ScalaCheckSuite {
 
   test("primitive range examples") {
     val comparators = for {
-      cmp    <- List(">", "=", "<", ">=", "<=")
+      cmp <- List(">", "=", "<", ">=", "<=")
       suffix <- List("1.2.3", "", "wat") //test both valid and invalid
     } yield cmp + suffix
     comparators.foreach(coreEqCats)
