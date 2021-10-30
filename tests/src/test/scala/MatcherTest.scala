@@ -8,7 +8,7 @@ import Shrinkers._
 class MatcherTest extends munit.ScalaCheckSuite {
 
   def areEquivalent(m1: Matcher, m2: Matcher) = forAll(GenVersion.genVersion) { v =>
-    //test both "default" and all explicit pre-release behaviours
+    // test both "default" and all explicit pre-release behaviours
 
     assertEquals(
       m1.matches(v),
@@ -228,9 +228,9 @@ class MatcherTest extends munit.ScalaCheckSuite {
     assert(!m1.matches(ver, PreReleaseBehaviour.Strict))
   }
 
-  //If a partial version is provided as the second version in the inclusive range, then all versions that start with the supplied parts of the tuple are accepted, but nothing that would be greater than the provided tuple parts.
-  //1.2.3 - 2.3 -> >=1.2.3 <2.4.0-0
-  //1.2.3 - 2 := >=1.2.3 <3.0.0-0
+  // If a partial version is provided as the second version in the inclusive range, then all versions that start with the supplied parts of the tuple are accepted, but nothing that would be greater than the provided tuple parts.
+  // 1.2.3 - 2.3 -> >=1.2.3 <2.4.0-0
+  // 1.2.3 - 2 := >=1.2.3 <3.0.0-0
 
   test("hyphen range examples right partial") {
     val range    = m"2.12.13 - 3"

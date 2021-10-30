@@ -132,7 +132,7 @@ lazy val npmEquivalence = projectMatrix
   .in(file("npmEquivalence"))
   .enablePlugins(ScalaJSBundlerPlugin)
   .settings(
-    //testFrameworks += new TestFramework("munit.Framework"),
+    // testFrameworks += new TestFramework("munit.Framework"),
     name                               := "npmFacade",
     Test / npmDependencies += "semver" -> "7.3.5",
     publish / skip                     := true,
@@ -152,7 +152,7 @@ lazy val npmEquivalence = projectMatrix
 lazy val tests = projectMatrix
   .in(file("tests"))
   .settings(
-    //testFrameworks += new TestFramework("munit.Framework"),
+    // testFrameworks += new TestFramework("munit.Framework"),
     name := "tests",
     scalacOptions -= "-Xfatal-warnings",
     publish / skip := true,
@@ -173,7 +173,7 @@ lazy val tests = projectMatrix
 lazy val catsParseReporter = projectMatrix
   .in(file("reporter"))
   .settings(
-    //testFrameworks += new TestFramework("munit.Framework"),
+    // testFrameworks += new TestFramework("munit.Framework"),
     version := "0.1.0-SNAPSHOT",
     name    := "catsParseReporter",
     libraryDependencies ++= List(
