@@ -12,7 +12,7 @@ object SemverParser {
   val int       = Numbers.bigInt.collect { case bi if bi.isValidInt && bi >= 0 => bi.intValue }
   val long      = Numbers.bigInt.collect { case bi if bi.isValidLong && bi >= 0 => bi.longValue }
   val dot       = P.char('.')
-  val letter    = P.charWhere(ch => ch.toInt < 255 && ch.isLetter) //a-zA-Z, none of that ழு or Я
+  val letter    = P.charWhere(ch => ch.toInt < 255 && ch.isLetter) // a-zA-Z, none of that ழு or Я
   val nonDigit  = letter.orElse(P.char('-').as('-'))
   val identChar = nonDigit.orElse(Numbers.digit)
 

@@ -33,12 +33,12 @@ object VersionOrder {
     case (Left(str1), Left(str2)) => ASCIIbetical.compare(str1, str2)
     case (Right(l1), Right(l2))   => Ordering.Long.compare(l1, l2)
     case (Left(_: String), Right(_: Long)) =>
-      1 //numerical sorts before alphanumerical
+      1 // numerical sorts before alphanumerical
     case (Right(_), Left(_)) => -1
   }
 
-  //given identical prefixes, the shorter one comes *after* the longer one
-  //this subsumes the case that no pre-release comes its pre-release
+  // given identical prefixes, the shorter one comes *after* the longer one
+  // this subsumes the case that no pre-release comes its pre-release
   def preReleasePrecedence(l1: List[Identifier], l2: List[Identifier]): Int = (l1, l2) match {
     case (Nil, Nil) => 0
     case (Nil, _)   => 1

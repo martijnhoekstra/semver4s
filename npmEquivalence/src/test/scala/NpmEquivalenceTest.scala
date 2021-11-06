@@ -66,7 +66,7 @@ class NpmEquivalenceTest extends munit.ScalaCheckSuite:
     val Right(v) = parseVersion(version)
     val Right(m) = parseMatcher(matcher)
 
-    //val matchingOptions = List(PreReleaseBehaviour.Loose -> MatchOptions.lenient, PreReleaseBehaviour.Strict -> MatchOptions.strict)
+    // val matchingOptions = List(PreReleaseBehaviour.Loose -> MatchOptions.lenient, PreReleaseBehaviour.Strict -> MatchOptions.strict)
 
     val matches4s  = m.matches(v)
     val matchesNPM = NPMSemver.satisfies(version, matcher)

@@ -11,22 +11,22 @@ class OrderTest extends munit.ScalaCheckSuite {
   import math.Ordering.Implicits.infixOrderingOps
 
   test("No pre-release after pre-release") {
-    //11.3: When major, minor, and patch are equal, a pre-release version
-    //has lower precedence than a normal version:
+    // 11.3: When major, minor, and patch are equal, a pre-release version
+    // has lower precedence than a normal version:
     val pre: SemVer.PreReleaseSuffix = List(Right(1L))
     assert(clue(pre) < clue(Nil))
   }
 
   property("Shorter pre-release before longer") {
-    //11.4.4: A larger set of pre-release fields has a higher precedence than a
-    //smaller set, if all of the preceding identifiers are equal.
+    // 11.4.4: A larger set of pre-release fields has a higher precedence than a
+    // smaller set, if all of the preceding identifiers are equal.
     forAll(genPre, genPre)((pre, extra) => {
       assert(clue(pre) > clue(pre ::: extra))
     })
   }
 
   property("Lower numeric before higher numeric") {
-    //you'd think it's obvious
+    // you'd think it's obvious
     forAll(genNumericId, genNumericId)((num1, num2) => {
       assertEquals(List(num1) < List(num2), num1.toOption.get < num2.toOption.get)
       assertEquals(List(num1) > List(num2), num1.toOption.get > num2.toOption.get)
@@ -34,7 +34,7 @@ class OrderTest extends munit.ScalaCheckSuite {
   }
 
   property("numeric pre-release before alpha") {
-    //11.4.3: Numeric identifiers always have lower precedence than non-numeric identifiers.
+    // 11.4.3: Numeric identifiers always have lower precedence than non-numeric identifiers.
     forAll(genAlphaId, genNumericId)((alpha, num) => {
       val alphaId = List(alpha)
       val numId   = List(num)

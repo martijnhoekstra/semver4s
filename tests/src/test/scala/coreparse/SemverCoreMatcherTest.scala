@@ -14,7 +14,7 @@ class SemverCoreMatcherTest extends munit.ScalaCheckSuite {
     val cats = semver4s.parsing.MatcherParser.matcher.parseAll(matcherString)
     (core, cats) match {
       case (Right(cr), Right(ct)) => assertEquals(cr, ct)
-      case (Left(_), Left(_))     => () //error reporting may differ freely
+      case (Left(_), Left(_))     => () // error reporting may differ freely
       case _ =>
         if (core.isLeft) fail(s"core failed on matcher $matcherString")
         else {
@@ -27,7 +27,7 @@ class SemverCoreMatcherTest extends munit.ScalaCheckSuite {
   test("primitive range examples") {
     val comparators = for {
       cmp <- List(">", "=", "<", ">=", "<=")
-      suffix <- List("1.2.3", "", "wat") //test both valid and invalid
+      suffix <- List("1.2.3", "", "wat") // test both valid and invalid
     } yield cmp + suffix
     comparators.foreach(coreEqCats)
   }

@@ -52,7 +52,7 @@ class IncrementTest extends munit.ScalaCheckSuite {
   }
 
   implicit class Void[T](t: T) {
-    @nowarn //returning unit isn't all that big a side-effect
+    @nowarn // returning unit isn't all that big a side-effect
     def void = ()
   }
 
