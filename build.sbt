@@ -1,8 +1,8 @@
 import xerial.sbt.Sonatype._
 
 val scala3Version   = "3.0.2"
-val scala213Version = "2.13.7"
-val scala212Version = "2.12.15"
+val scala213Version = "2.13.6"
+val scala212Version = "2.12.14"
 
 val allScalaVersions = List(scala3Version, scala212Version, scala213Version)
 
