@@ -118,7 +118,7 @@ lazy val catsParse = projectMatrix
   .settings(
     name    := "semver4s-cats-parse",
     version := "1.0.0",
-    libraryDependencies ++= List("org.typelevel" %%% "cats-parse" % "0.3.5")
+    libraryDependencies ++= List("org.typelevel" %%% "cats-parse" % "0.3.6")
   )
   .dependsOn(core)
   .jvmPlatform(scalaVersions = allScalaVersions)
@@ -177,7 +177,7 @@ lazy val catsParseReporter = projectMatrix
     version := "0.1.0-SNAPSHOT",
     name    := "catsParseReporter",
     libraryDependencies ++= List(
-      "org.typelevel" %%% "cats-parse"       % "0.3.5",
+      "org.typelevel" %%% "cats-parse"       % "0.3.6",
       "org.scalameta" %%% "munit"            % "0.7.29" % "test",
       "org.scalameta" %%% "munit-scalacheck" % "0.7.29" % "test"
     )
